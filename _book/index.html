@@ -29,7 +29,7 @@ set in the _output.yml file.</p>" />
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-05-29" />
+<meta name="date" content="2026-06-01" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -37,7 +37,7 @@ set in the _output.yml file.</p>" />
   
   
 
-<link rel="next" href="preparing-the-precipitation-database.html"/>
+<link rel="next" href="precipdata.html"/>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -147,33 +147,26 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <li class="divider"></li>
 <li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction &amp; Overview</a></li>
-<li class="chapter" data-level="2" data-path="preparing-the-precipitation-database.html"><a href="preparing-the-precipitation-database.html"><i class="fa fa-check"></i><b>2</b> Preparing the Precipitation Database</a>
+<li class="chapter" data-level="2" data-path="precipdata.html"><a href="precipdata.html"><i class="fa fa-check"></i><b>2</b> Preparing the Precipitation Database</a>
 <ul>
-<li class="chapter" data-level="2.1" data-path="preparing-the-precipitation-database.html"><a href="preparing-the-precipitation-database.html#download-ghcnd-stations"><i class="fa fa-check"></i><b>2.1</b> Download GHCNd stations</a></li>
-<li class="chapter" data-level="2.2" data-path="preparing-the-precipitation-database.html"><a href="preparing-the-precipitation-database.html#combine-and-organize-ghcnd-data"><i class="fa fa-check"></i><b>2.2</b> Combine and Organize GHCNd Data</a></li>
-<li class="chapter" data-level="2.3" data-path="preparing-the-precipitation-database.html"><a href="preparing-the-precipitation-database.html#anmax"><i class="fa fa-check"></i><b>2.3</b> Calculate Annual Maxima</a></li>
-<li class="chapter" data-level="2.4" data-path="preparing-the-precipitation-database.html"><a href="preparing-the-precipitation-database.html#prism"><i class="fa fa-check"></i><b>2.4</b> PRISM Variables</a></li>
-<li class="chapter" data-level="2.5" data-path="preparing-the-precipitation-database.html"><a href="preparing-the-precipitation-database.html#targets"><i class="fa fa-check"></i><b>2.5</b> Targets and Target Areas</a></li>
-<li class="chapter" data-level="2.6" data-path="preparing-the-precipitation-database.html"><a href="preparing-the-precipitation-database.html#setting-up-your-workspace"><i class="fa fa-check"></i><b>2.6</b> Setting Up Your Workspace</a></li>
+<li class="chapter" data-level="2.1" data-path="precipdata.html"><a href="precipdata.html#download"><i class="fa fa-check"></i><b>2.1</b> Download GHCNd stations</a></li>
+<li class="chapter" data-level="2.2" data-path="precipdata.html"><a href="precipdata.html#combine-and-organize-ghcnd-data"><i class="fa fa-check"></i><b>2.2</b> Combine and Organize GHCNd Data</a></li>
+<li class="chapter" data-level="2.3" data-path="precipdata.html"><a href="precipdata.html#anmax"><i class="fa fa-check"></i><b>2.3</b> Calculate Annual Maxima</a></li>
+<li class="chapter" data-level="2.4" data-path="precipdata.html"><a href="precipdata.html#prism"><i class="fa fa-check"></i><b>2.4</b> PRISM Variables</a></li>
+<li class="chapter" data-level="2.5" data-path="precipdata.html"><a href="precipdata.html#targets"><i class="fa fa-check"></i><b>2.5</b> Targets and Target Areas</a></li>
+<li class="chapter" data-level="2.6" data-path="precipdata.html"><a href="precipdata.html#setting-up-your-workspace"><i class="fa fa-check"></i><b>2.6</b> Setting Up Your Workspace</a></li>
 </ul></li>
 <li class="chapter" data-level="3" data-path="workflow.html"><a href="workflow.html"><i class="fa fa-check"></i><b>3</b> Workflow for MSP Precipitation-Frequency</a>
 <ul>
-<li class="chapter" data-level="3.1" data-path="workflow.html"><a href="workflow.html#step-1-msp_setup"><i class="fa fa-check"></i><b>3.1</b> Step 1: <code>msp_setup( )</code></a></li>
-<li class="chapter" data-level="3.2" data-path="workflow.html"><a href="workflow.html#step-2-fit_msp"><i class="fa fa-check"></i><b>3.2</b> Step 2: <code>fit_msp( )</code></a></li>
-<li class="chapter" data-level="3.3" data-path="workflow.html"><a href="workflow.html#step-3-optimize-trend-raster-models"><i class="fa fa-check"></i><b>3.3</b> Step 3: Optimize Trend Raster Models</a></li>
-<li class="chapter" data-level="3.4" data-path="workflow.html"><a href="workflow.html#step-4-fitting-the-model"><i class="fa fa-check"></i><b>3.4</b> Step 4: Fitting the Model</a>
+<li class="chapter" data-level="3.1" data-path="workflow.html"><a href="workflow.html#mspsetup"><i class="fa fa-check"></i><b>3.1</b> Step 1: <code>msp_setup( )</code></a></li>
+<li class="chapter" data-level="3.2" data-path="workflow.html"><a href="workflow.html#step-2-fit_msp-fitmsp"><i class="fa fa-check"></i><b>3.2</b> Step 2: <code>fit_msp( )</code> {fitmsp}</a></li>
+<li class="chapter" data-level="3.3" data-path="workflow.html"><a href="workflow.html#mspuncertainty"><i class="fa fa-check"></i><b>3.3</b> Step 3: <code>msp_uncertainty( )</code></a></li>
+<li class="chapter" data-level="3.4" data-path="workflow.html"><a href="workflow.html#simulatefrommsp"><i class="fa fa-check"></i><b>3.4</b> Step 4: <code>simulate_from_msp( )</code></a></li>
+<li class="chapter" data-level="3.5" data-path="workflow.html"><a href="workflow.html#bonusfunctions"><i class="fa fa-check"></i><b>3.5</b> Step 5: Bonus Functions</a>
 <ul>
-<li class="chapter" data-level="3.4.1" data-path="workflow.html"><a href="workflow.html#step-4a-fit-spatial-regression"><i class="fa fa-check"></i><b>3.4.1</b> Step 4a: Fit Spatial Regression</a></li>
-<li class="chapter" data-level="3.4.2" data-path="workflow.html"><a href="workflow.html#step-4b-fit-initial-msp"><i class="fa fa-check"></i><b>3.4.2</b> Step 4b: Fit Initial MSP</a></li>
-<li class="chapter" data-level="3.4.3" data-path="workflow.html"><a href="workflow.html#step-4c-fit-the-joint-msp"><i class="fa fa-check"></i><b>3.4.3</b> Step 4c: Fit the Joint MSP</a></li>
+<li class="chapter" data-level="3.5.1" data-path="workflow.html"><a href="workflow.html#mspsmooth"><i class="fa fa-check"></i><b>3.5.1</b> <code>msp_smooth( )</code></a></li>
+<li class="chapter" data-level="3.5.2" data-path="workflow.html"><a href="workflow.html#msppointprecip"><i class="fa fa-check"></i><b>3.5.2</b> <code>msp_point_precip( )</code></a></li>
 </ul></li>
-<li class="chapter" data-level="3.5" data-path="workflow.html"><a href="workflow.html#step-5-bootstrapping"><i class="fa fa-check"></i><b>3.5</b> Step 5: Bootstrapping!</a></li>
-<li class="chapter" data-level="3.6" data-path="workflow.html"><a href="workflow.html#step-6-simulation"><i class="fa fa-check"></i><b>3.6</b> Step 6: Simulation</a>
-<ul>
-<li class="chapter" data-level="3.6.1" data-path="workflow.html"><a href="workflow.html#step-6a-simulate-from-the-bootstrapped-msp"><i class="fa fa-check"></i><b>3.6.1</b> Step 6a: Simulate from the Bootstrapped MSP</a></li>
-<li class="chapter" data-level="3.6.2" data-path="workflow.html"><a href="workflow.html#step-6b-build-trend-rasters"><i class="fa fa-check"></i><b>3.6.2</b> Step 6b: Build Trend Rasters</a></li>
-</ul></li>
-<li class="chapter" data-level="3.7" data-path="workflow.html"><a href="workflow.html#step-7-generate-basin-means"><i class="fa fa-check"></i><b>3.7</b> Step 7: Generate Basin Means</a></li>
 </ul></li>
 <li class="appendix"><span><b>Appendix</b></span></li>
 <li class="chapter" data-level="A" data-path="qc.html"><a href="qc.html"><i class="fa fa-check"></i><b>A</b> Quality Control for Precipitation Annual Maximum Series</a>
@@ -182,8 +175,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="A.2" data-path="qc.html"><a href="qc.html#ratio-test"><i class="fa fa-check"></i><b>A.2</b> Ratio Test</a></li>
 <li class="chapter" data-level="A.3" data-path="qc.html"><a href="qc.html#outlier-test"><i class="fa fa-check"></i><b>A.3</b> Outlier Test</a></li>
 <li class="chapter" data-level="A.4" data-path="qc.html"><a href="qc.html#extreme-gev-parameters"><i class="fa fa-check"></i><b>A.4</b> Extreme GEV Parameters</a></li>
+<li class="chapter" data-level="A.5" data-path="qc.html"><a href="qc.html#using-the-data-from-rmcmsp"><i class="fa fa-check"></i><b>A.5</b> Using the Data from <code>RMCmsp</code></a></li>
+<li class="chapter" data-level="A.6" data-path="qc.html"><a href="qc.html#using-your-own-data-from-section-refprecipdata"><i class="fa fa-check"></i><b>A.6</b> Using Your Own Data from Section @ref(precipdata)</a></li>
 </ul></li>
-<li class="chapter" data-level="B" data-path="example.html"><a href="example.html"><i class="fa fa-check"></i><b>B</b> Example Workflow</a></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
 
@@ -207,7 +201,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="header">
 <h1 class="title">Basin Average Precipitation-Frequency Using Max Stable Processes</h1>
 <p class="author"><em>Andrew Verdin</em></p>
-<p class="date"><em>2026-05-29</em></p>
+<p class="date"><em>2026-06-01</em></p>
 </div>
 <div id="intro" class="section level1 hasAnchor" number="1">
 <h1><span class="header-section-number">Chapter 1</span> Introduction &amp; Overview<a href="index.html#intro" class="anchor-section" aria-label="Anchor link to header"></a></h1>
@@ -253,7 +247,7 @@ c.<code>nsims</code> are the number of parameter sets you want to create. This w
 </ol>
 <p>Currently, the <code>simulate_from_msp( )</code> function requires output from the <code>msp_uncertainty( )</code> function. The functionality to simulate from a single general MSP model (i.e., output from the <code>fit_msp( )</code> function) will be incorporated as time permits. However, given the pretty quick approach to uncertainty (i.e., <code>method = mvn</code>), I recommend always running with uncertainty (e.g., <code>nsims = 20</code> in <code>msp_uncertainty( )</code>).</p>
 <p>Additionally, note that the <code>gev.erl</code> is NOT based on the number of simulations, but rather is a function of the input data. You can run 2 uncertainty simulations (e.g., <code>nsims=2</code> in <code>msp_uncertainty( )</code>) and end up with the exact same ERL you get when you run <code>nsims=500</code>. However, the <code>mean.gev.params</code> are a function of the number of simulations and need to be estimated robustly (e.g., <code>nsims=100</code> minimum). You shouldn’t need the mean GEV parameters and ERL for most applications, but we include them for convenience. Putting the <code>mean.gev.params</code> and <code>gev.erl</code> into software like TotalRisk will get you a GEV curve with uncertainty very quickly and efficiently :)</p>
-<p>Before any of these steps can be taken, however, the details on data preparation are discussed. In addition to the data preparation, quality control is crucial (see Appendix <a href="qc.html#qc">A</a> for a thorough quality control protocol). Following the data preparation discussion, each of the steps listed above will be discussed in detail in its own section. An example workflow and a list of required packages are provided in Appendix <a href="example.html#example">B</a>.</p>
+<p>Before any of these steps can be taken, however, the details on data preparation are discussed. In addition to the data preparation, quality control is crucial (see Appendix <a href="qc.html#qc">A</a> for a thorough quality control protocol). Following the data preparation discussion, each of the steps listed above will be discussed in detail in its own section. An example workflow and a list of required packages are provided in Appendix <a href="#example"><strong>??</strong></a>.</p>
 <p>If you have your data ready to go, skip to Chapter <a href="workflow.html#workflow">3</a></p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="index.html#cb1-1" tabindex="-1"></a>bookdown<span class="sc">::</span><span class="fu">serve_book</span>()</span></code></pre></div>
 
@@ -264,7 +258,7 @@ c.<code>nsims</code> are the number of parameter sets you want to create. This w
         </div>
       </div>
 
-<a href="preparing-the-precipitation-database.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="precipdata.html" class="navigation navigation-next navigation-unique" aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
@@ -278,17 +272,7 @@ c.<code>nsims</code> are the number of parameter sets you want to create. This w
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({
-  "sharing": {
-    "github": false,
-    "facebook": true,
-    "twitter": true,
-    "linkedin": false,
-    "weibo": false,
-    "instapaper": false,
-    "vk": false,
-    "whatsapp": false,
-    "all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
-  },
+  "sharing": null,
   "fontsettings": {
     "theme": "white",
     "family": "sans",
