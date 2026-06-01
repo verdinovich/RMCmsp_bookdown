@@ -1,0 +1,10 @@
+h1:appendix-appendix (APPENDIX) Appendix
+h1:qc Quality Control for Precipitation Annual Maximum Series
+h2:percent-completion-test Percent Completion Test
+h2:ratio-test Ratio Test
+h2:outlier-test Outlier Test
+h2:extreme-gev-parameters Extreme GEV Parameters
+h1:example Example Workflow
+h2:using-the-data-from-rmcmsp Using the Data from 
+h2:using-your-own-data-from-section-refprecipdata Using Your Own Data from Section @ref(precipdata)
+

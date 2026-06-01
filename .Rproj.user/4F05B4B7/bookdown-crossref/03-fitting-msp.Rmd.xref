@@ -1,0 +1,11 @@
+h1:workflow Workflow for MSP Precipitation-Frequency
+h2:mspsetup Step 1: 
+fig:atsite Plot of GEV location (left), scale (middle), and shape (right) for all sites in MSP analysis.
+h2:step-2-fit_msp-fitmsp Step 2:  {fitmsp}
+h2:mspuncertainty Step 3: 
+fig:fitspat0 Output from fit_spatial_GLM function, describing the spatial GEV model. 
+h2:simulatefrommsp Step 4: 
+h2:bonusfunctions Step 5: Bonus Functions
+h3:mspsmooth 
+h3:msppointprecip 
+

@@ -1,0 +1,72 @@
+library(devtools)
+load_all()
+
+# anmax = t(read.csv("C:/Users/q0rmcapv/Documents/RMCmsp/archive/mc-anmax-atr.csv"))
+# metad = read.csv("C:/Users/q0rmcapv/Documents/RMCmsp/archive/mc-metad-atr.csv")
+# target_locs = data.frame(x = c(-114.168, -114.2, -114.179), y = c(37.46147, 37.5, 37.55))
+# target_area = c(1,1,1)
+# prism_fpath = "C:/Users/q0rmcapv/Documents/RMCmsp/inst/extdata/mc_prism_variables_crop.rds"
+# shp_fpath   = "C:/Users/q0rmcapv/Documents/RMCmsp/inst/extdata/globalwatershed.shp"
+#
+# anmax[is.nan(anmax)] = NA
+# metad = subset(metad, select=c("lon","lat"))#data.frame(lon = lons, lat = lats)
+
+# added some data to automatically load: mc_anmax, mc_meta, mc_prism, mc_targets, mc_weights, mc_shapefile
+msp_workspace   <- msp_setup(anmax=mc_anmax, metadata=mc_meta, prism_rasters=mc_prism, subbasin_targets=mc_targets)
+#plot_at_site_gev(at_site_gev=msp_workspace$gev.fits, shp_path=shp_fpath)
+msp_fit         <- fit_msp(msp_workspace=msp_workspace, covar.mod='twhitmat')
+msp_pt_precip   <- msp_point_precip(msp_fit=msp_fit, shp=mc_shapefile, mapping_aep=0.01, tabular_aeps=NULL)
+
+msp_uncert_mvn  <- msp_uncertainty(msp_fit=msp_fit, method="mvn", nsims=100)
+msp_sims_mvn    <- simulate_from_msp_revised(msp_uncertainty=msp_uncert_mvn, msp_fit=msp_fit, nsims=10000, subbasin_targets=mc_targets, target_weights=mc_weights)
+msp_smoothed    <- msp_smooth(msp_sims=msp_sims_mvn)
+
+## boot version
+msp_uncert      <- msp_uncertainty(msp_fit=msp_fit, method="boot", nsims=100)
+msp_sims        <- simulate_from_msp(msp_uncertainty=msp_uncert,     msp_fit=msp_fit, nsims=10000, subbasin_targets=target_locs, target_weights=target_area)
+
+
+xtic <- -log(-log(msp_sims_mvn$pf_curve$pp))
+plot(xtic, msp_sims_mvn$pf_curve$upper, pch=NA, lwd=2, lty=2, xlab="AEP", ylab="Precip (mm)", axes=FALSE)
+# lines(xtic, msp_sims$pf_curve$lower, lwd=2, lty=2)
+# lines(xtic, msp_sims$pf_curve$mean, lwd=2)
+#
+lines(xtic, msp_sims_mvn$pf_curve$upper, lty=2, lwd=2, col=2)
+lines(xtic, msp_sims_mvn$pf_curve$mean, lty=1, lwd=2, col=2)
+# lines(xtic, msp_sims_mvn$pf_curve$model, lty=3, lwd=2, col=2)
+lines(xtic, msp_sims_mvn$pf_curve$lower, lty=2, lwd=2, col=2)
+
+# lines(-log(-log(1 - msp_smoothed_old$gev.table$AEP)), msp_smoothed_old$gev.table$Upper, lty=2, lwd=2)
+# lines(-log(-log(1 - msp_smoothed_old$gev.table$AEP)), msp_smoothed_old$gev.table$Lower, lty=2, lwd=2)
+# lines(-log(-log(1 - msp_smoothed_old$gev.table$AEP)), msp_smoothed_old$gev.table$Mean, lwd=2)
+
+lines(-log(-log(1 - msp_smoothed$gev.table$AEP)), msp_smoothed$gev.table$Upper, lty=2, lwd=2, col=4)
+lines(-log(-log(1 - msp_smoothed$gev.table$AEP)), msp_smoothed$gev.table$Lower, lty=2, lwd=2, col=4)
+lines(-log(-log(1 - msp_smoothed$gev.table$AEP)), msp_smoothed$gev.table$Mean, lwd=2, col=4)
+
+booterl <- read.csv("C:/Users/q0rmcapv/Documents/eigen-gev-table.csv")
+boot.tic <- -log(-log(1 - booterl$AEP))
+lines(boot.tic, booterl$Upper, lty=2, lwd=2, col=3)
+lines(boot.tic, booterl$Lower, lty=2, lwd=2, col=3)
+lines(boot.tic, booterl$Mean, lwd=2, col=3)
+lines(boot.tic, booterl$Specified, lwd=2, col=3, lty=3)
+
+lines(-log(-log(1 - msp_pt_precip$pf_table$AEP)), msp_pt_precip$pf_table$Precip, lwd=2)
+# system.time({
+#   msp_smooths <- msp_smooth(msp_sims_mvn)
+# })
+
+# plot(-log(-log(1 - msp_smooths$gev.table$AEP)), msp_smooths$gev.table$Upper, type='l', lty=2, lwd=2, axes=FALSE, xlab="AEP", ylab="Precipitation (mm)")
+# lines(-log(-log(1 - msp_smooths$gev.table$AEP)), msp_smooths$gev.table$Lower, lty=2, lwd=2)
+# lines(-log(-log(1 - msp_smooths$gev.table$AEP)), msp_smooths$gev.table$Mean, lwd=2)
+#
+# lines()
+
+
+axis(1, at=c(-log(-log(1 - c(0.99, 0.9, 0.5, 0.25, 0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001)))), labels=c(.99,.9,.5,.25,.1,.05,.01,.005,.001,.0005,.0001))
+axis(2);box()
+legend("topleft", legend=c("Nonparametric", "GEV Fit to 10,000 Samples", "ERL-Based Uncertainty", "Basin Average GEV Parameters"), lwd=c(2,2,2,3), col=c(2,4,3,1))
+
+
+
+

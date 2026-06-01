@@ -1,0 +1,70 @@
+--- 
+title: "Basin Average Precipitation-Frequency Using Max Stable Processes"
+author: "Andrew Verdin"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+# url: your book url like https://bookdown.org/yihui/bookdown
+# cover-image: path to the social sharing image like images/cover.jpg
+description: |
+  This is a minimal example of using the bookdown package to write a book.
+  The HTML output format for this example is bookdown::gitbook,
+  set in the _output.yml file.
+link-citations: yes
+github-repo: rstudio/bookdown-demo
+---
+
+# Introduction & Overview {#intro}
+
+This document presents a cohesive R package (`RMCmsp`) created with the purpose of streamlining the computation of basin-average precipitation-frequency curves using Max-Stable Processes (MSP). An example workflow is included in the R package as a tutorial. The functions contained within `RMCmsp` are essentially the compilation and optimization of R scripts originally written for the basin-average precipitation-frequency analysis for the Painted Rock Dam watershed. These original R scripts were created by Brian Skahill of the USACE Engineer Research and Development Center (ERDC), and were recently organized and streamlined by Andrew Verdin and Samantha Hartke of the USACE Risk Management Center (RMC). This document presents an overview of the basic functions of the MSP spatial extremes workflow. There are endless bells and whistles that can/will eventually be integrated into this R package, as time permits.
+
+The basic functions can be summarized as follows:
+
+1. Use the `msp_setup( )` function to set up the MSP workspace 
+    a. Estimate the GEV parameters at each site independently
+    b. Extract PRISM covariates for each site
+    c. Identify optimal PRISM covariates to generate GEV trend rasters
+    d. Optionally, use the `plot_at_site_gev( )` function to visualize the spatial distribution of GEV parameters (Note, the shapefile will not plot if you are on the network, because efficiency!)
+2. Use the `fit_msp( )` function to fit the general MSP model (marginals and spatial covariance, simultaneously)
+    a. Fit spatial model for GEV parameters (i.e., marginals)
+    b. Fit initial MSP for spatial covariance parameters
+    c. Fit general MSP model (i.e., marginals and covariance simultaneously) 
+3. Use the `msp_uncertainty( )` function to create an ensemble of general MSP model parameters. 
+    a. You can choose to do this using random samples from a multivariate normal distribution (`method = "mvn"`), and this will take < 1 second
+    b. You can also choose the brute force way (`method = "boot"`), but this will take 24+ hours...). Please, just don't do this right now
+    c.`nsims` are the number of parameter sets you want to create. This will bottleneck significantly with `method = boot`
+    d. Note that you can generate more samples very quickly with `method = mvn`, but the bottleneck comes when passing those samples to `simulate_from_msp( )` in the next step. Start with something like `nsims = 20` for testing. For a final estimate, `nsims = 300` is usually good
+4. Use the `simulate_from_msp( )` function to create the basin-average precipitation-frequency curves using the general MSP model with MSP uncertainty
+    a. This function takes the output from the `msp_uncertainty( )` function, the output from the `fit_msp( )` function, the number of simulations desired, and the target locations and weights as input
+    b. The number of simulations modulates how rare of a precipitation-frequency estimate you want (e.g., `nsims=10000` results in estimates out to 1E-4)
+    c. The target locations and weights should be significantly less than the number of grid cells in the watershed. Think of these as subbasin centroids, where the weights are the subbasin areas
+5. Optionally, you can use the `msp_smooth( )` function to produce parametric representation of the nonparametric precipitation-frequency curves
+    a. This function takes the output from `simulate_from_msp( )` function and gives you a lot of cool information
+    b. `gev.params` - five columns: gev.loc, gev.scale, gev.shape, optim, and convergence. The number of rows is equal to the number of simulations from `msp_uncertainty( )` 
+    c. `gev.quants` - number of columns equal to the number of simulations from `msp_uncertainty( )` plus 1. The extra column holds the AEP for these quantiles. Each column holds quantiles for the corresponding GEV parameters from `gev.params`
+    d. `gev.table` - a table with AEP, Upper, Lower, and Mean precipitation-frequency estimates (Upper and Lower correspond to the confidence interval specified by the user, e.g., `ci=90` means a 90% confidence interval)
+    e. `ci` - the specified confidence interval in percent (e.g., `ci=90`)
+    f. `mean.gev.params` - the GEV distribution parameters that best represent the mean precipitation-frequency curve
+    g. `gev.erl` - the effective record length to quantify uncertainty around `mean.gev.params`
+
+Currently, the `simulate_from_msp( )` function requires output from the `msp_uncertainty( )` function. The functionality to simulate from a single general MSP model (i.e., output from the `fit_msp( )` function) will be incorporated as time permits. However, given the pretty quick approach to uncertainty (i.e., `method = mvn`), I recommend always running with uncertainty (e.g., `nsims = 20` in `msp_uncertainty( )`). 
+
+Additionally, note that the `gev.erl` is NOT based on the number of simulations, but rather is a function of the input data. You can run 2 uncertainty simulations (e.g., `nsims=2` in `msp_uncertainty( )`) and end up with the exact same ERL you get when you run `nsims=500`. However, the `mean.gev.params` are a function of the number of simulations and need to be estimated robustly (e.g., `nsims=100` minimum). You shouldn't need the mean GEV parameters and ERL for most applications, but we include them for convenience. Putting the `mean.gev.params` and `gev.erl` into software like TotalRisk will get you a GEV curve with uncertainty very quickly and efficiently :)
+
+Before any of these steps can be taken, however, the details on data preparation are discussed. In addition to the data preparation, quality control is crucial (see Appendix \@ref(qc) for a thorough quality control protocol). Following the data preparation discussion, each of the steps listed above will be discussed in detail in its own section. An example workflow and a list of required packages are provided in Appendix \@ref(example). 
+
+If you have your data ready to go, skip to Chapter \@ref(workflow)
+
+
+```{r eval=FALSE}
+bookdown::serve_book()
+```
+
+
+```{r include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'bookdown', 'knitr', 'rmarkdown'
+), 'packages.bib')
+```

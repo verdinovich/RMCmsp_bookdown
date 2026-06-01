@@ -1,0 +1,202 @@
+#' Set up the workspace for RMCmsp analysis
+#'
+#' @param anmax Matrix of annual maxima, rows are years, columns are sites. Include NA for missing years.
+#' @param metadata Matrix of station metadata. Minimum requirements are longitude and latitude. Recommend include Station ID.
+#' @param prism_rasters A list of prism rasters cropped to your region of interest.
+#' @param subbasin_targets A matrix with the subbasin target locations, to be normalized consistently with prism variables.
+#' @inheritParams glmnet::glmnet
+#' @inheritParams glmnet::cv.glmnet
+#'
+#' @return A list that contains the at-site gev estimates, normalized prism covariates, prism colmeans, prism col st dev, normalized subbasin targets, and elastic net (cv.glmnet) results.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' msp_workspace <- msp_setup(anmax, metadata, prism_file, subbasin_targets)
+#' }
+#'
+msp_setup <- function(anmax, metadata, prism_rasters, subbasin_targets, alpha=0.95, nfolds=175){
+
+  ############################################################################
+  # fit the at-site gev
+  ############################################################################
+
+  # fit at-site gev at each site simultaneously
+  fgev_list <- apply(anmax, 2, FUN=evd::fgev, std.err=FALSE, control=list(maxit=20000))
+
+  # extract the gev parameters from the list
+  loc <- sapply(fgev_list, function(x) x$param[1])
+  scl <- sapply(fgev_list, function(x) x$param[2])
+  shp <- sapply(fgev_list, function(x) x$param[3])
+
+  # put the parameters in a data frame alongside metadata
+  gev.out <- data.frame(cbind(metadata, gev.loc=loc, gev.scale=scl, gev.shape=shp))
+
+
+  ############################################################################
+  # extract prism covariates at each site for elastic net / trend raster development
+  ############################################################################
+
+  # Load gridded prism covariate data over study area
+  # prism_rasters <- readRDS(prism_file)
+
+  # set up lon, lat for extraction
+  X.pts <- metadata$lon
+  Y.pts <- metadata$lat
+  XY <- as.matrix(cbind(X.pts, Y.pts))
+
+  # define prism variable names
+  prism_names = names(prism_rasters)
+  prism_fn_out = paste0(prism_names, ".pts")
+
+  # extract prism variables to lon, lat
+  pb <- utils::txtProgressBar(min=1, max=length(prism_names), style=3)
+  for(i in 1:length(prism_names)){
+    # utils::setTxtProgressBar(pb,i)
+    temp_var = raster::extract(prism_rasters[[i]], y=XY)
+    assign(prism_fn_out[i], value = temp_var)
+  }
+
+
+  # extract prism variables to subbasin target locations
+  target_prism_vars <- matrix(NA, nrow=nrow(subbasin_targets), ncol=length(prism_rasters))
+  for(i in 1:length(prism_names)){
+    target_prism_vars[,i] <- raster::extract(prism_rasters[[i]], y=subbasin_targets)
+  }
+  colnames(target_prism_vars) <- prism_fn_out
+
+
+  # define the local environment for do.call
+  e <- environment()
+
+  if(!("Z.pts" %in% prism_fn_out)){
+    stop("Check your prism variables. Elevation must be included and must be given name 'Z'")
+  }
+
+  # define variables for trend raster development, elastic net optimization
+  Z.pts   <- get("Z.pts")#prism_fn_out[prism_names %in% "Z.pts"])
+  XY.pts  <- X.pts * Y.pts
+  XZ.pts  <- X.pts * Z.pts
+  YZ.pts  <- Y.pts * Z.pts
+  X2.pts  <- X.pts * X.pts
+  Y2.pts  <- Y.pts * Y.pts
+  XY2.pts <- XY.pts * XY.pts
+  XZ2.pts <- XZ.pts * XZ.pts
+  YZ2.pts <- YZ.pts * YZ.pts
+  Z2.pts  <- Z.pts * Z.pts
+
+  # put them all in a single matrix for export
+  covs <- cbind(X.pts, Y.pts, XY.pts, XZ.pts, YZ.pts, X2.pts, Y2.pts, XY2.pts, XZ2.pts, YZ2.pts, Z2.pts,
+                do.call(cbind, lapply(prism_fn_out, get, envir = e)))
+  #print(prism_fn_out)
+  colnames(covs) <- c("X.pts", "Y.pts", "XY.pts", "XZ.pts", "YZ.pts", "X2.pts", "Y2.pts", "XY2.pts", "XZ2.pts", "YZ2.pts", "Z2.pts",
+                      prism_fn_out)
+
+  # Normalize ('standardize') covariates
+  covs_norm <- apply(covs,2,scale)
+  covs_col_means <- apply(covs,2,mean)
+  covs_col_sds <- apply(covs,2,stats::sd)
+
+  for(i in 1:ncol(target_prism_vars)){
+    # print(colnames(covs))
+    # print(colnames(target_prism_vars))
+    col.id <- which(colnames(covs) %in% colnames(target_prism_vars)[i])
+    # print(col.id)
+    target_prism_vars[,i] = (target_prism_vars[,i] - covs_col_means[col.id]) / covs_col_sds[col.id]
+  }
+
+  # Normalize ('standardize') subbasin targets for simulation
+  targets_norm <- subbasin_targets
+  targets_norm[,1] <- (subbasin_targets[,1] - covs_col_means[names(covs_col_means) == "X.pts"]) / covs_col_sds[names(covs_col_sds) == "X.pts"]
+  targets_norm[,2] <- (subbasin_targets[,2] - covs_col_means[names(covs_col_means) == "Y.pts"]) / covs_col_sds[names(covs_col_sds) == "Y.pts"]
+
+  # build out the target prism variables data frame
+  target_prism_vars <- as.data.frame(target_prism_vars)
+  target_prism_vars$X.pts <- targets_norm[,1]
+  target_prism_vars$Y.pts <- targets_norm[,2]
+
+  target_prism_vars$XY.pts <- target_prism_vars$X.pts * target_prism_vars$Y.pts
+  target_prism_vars$XZ.pts <- target_prism_vars$X.pts * target_prism_vars$Z.pts
+  target_prism_vars$YZ.pts <- target_prism_vars$Y.pts * target_prism_vars$Z.pts
+  target_prism_vars$X2.pts <- target_prism_vars$X.pts * target_prism_vars$X.pts
+  target_prism_vars$Y2.pts <- target_prism_vars$Y.pts * target_prism_vars$Y.pts
+  target_prism_vars$XY2.pts <- target_prism_vars$XY.pts * target_prism_vars$XY.pts
+  target_prism_vars$XZ2.pts <- target_prism_vars$XZ.pts * target_prism_vars$XZ.pts
+  target_prism_vars$YZ2.pts <- target_prism_vars$YZ.pts * target_prism_vars$YZ.pts
+  target_prism_vars$Z2.pts <- target_prism_vars$Z.pts * target_prism_vars$Z.pts
+
+  # Create rasters of X, Y, XY, XZ, YZ, X2, Y2, XY2, XZ2, YZ2, and Z2
+  X <- Y <- Z <- XY <- XZ <- YZ <- X2 <- Y2 <- XY2 <- XZ2 <- YZ2 <- Z2 <- prism_rasters$Z
+  raster::values(X)   <- raster::coordinates(Z)[,1]
+  raster::values(Y)   <- raster::coordinates(Z)[,2]
+  raster::values(XY)  <- raster::values(X) * raster::values(Y)
+  raster::values(XZ)  <- raster::values(X) * raster::values(Z)
+  raster::values(YZ)  <- raster::values(Y) * raster::values(Z)
+  raster::values(X2)  <- raster::values(X) * raster::values(X)
+  raster::values(Y2)  <- raster::values(Y) * raster::values(Y)
+  raster::values(XY2) <- raster::values(XY) * raster::values(XY)
+  raster::values(XZ2) <- raster::values(XZ) * raster::values(XZ)
+  raster::values(YZ2) <- raster::values(YZ) * raster::values(YZ)
+  raster::values(Z2)  <- raster::values(Z) * raster::values(Z)
+
+  # rename the rasters so you know what they are
+  names(X)   <- "X"
+  names(Y)   <- "Y"
+  names(Z)   <- "Z"
+  names(XY)  <- "XY"
+  names(XZ)  <- "XZ"
+  names(YZ)  <- "YZ"
+  names(X2)  <- "X2"
+  names(Y2)  <- "Y2"
+  names(XY2) <- "XY2"
+  names(XZ2) <- "XZ2"
+  names(YZ2) <- "YZ2"
+  names(Z2)  <- "Z2"
+
+  #print(names(X2))
+
+  new_rasters = c("X","Y","Z","XY","XZ","YZ","X2","Y2","XY2","XZ2","YZ2","Z2")
+  # add the rasters to the raster list
+  npr <- length(prism_rasters)
+  for(i in 1:length(new_rasters)){
+    prism_rasters[[(i+npr)]] = get(new_rasters[i])
+  }
+
+  names(prism_rasters)[(npr+1):(npr+i)] <- new_rasters
+
+
+  ############################################################################
+  # Elastic net for Optimization
+  ############################################################################
+
+  # Define initial lambdas to use in GLM elastic net
+  lambdas <- exp(seq(from=-9,to=4,by=0.05))
+
+  # Count the number of years with valid annual maxima at each station
+  count <- apply(!is.na(anmax), 2, sum)
+  count2 <- count/sum(count)
+
+  ## ----- Fit GLM to loc parameter -----
+  mu_obs <- as.vector(loc)
+  glmnet_cvfit_loc <- suppressWarnings(glmnet::cv.glmnet(covs_norm,loc,nfolds=nfolds,alpha=alpha,maxit=10000000,lambda=lambdas,weights=count2))
+
+  ## ----- Fit GLM to scale parameter -----
+  scale_obs <- as.vector(scl)
+  glmnet_cvfit_scale <- suppressWarnings(glmnet::cv.glmnet(covs_norm,scl,nfolds=nfolds,alpha=alpha,maxit=10000000,lambda=lambdas,weights=count2))
+
+  ## ----- Fit GLM to shape parameter -----
+  shape_obs <- as.vector(shp)
+  glmnet_cvfit_shape <- suppressWarnings(glmnet::cv.glmnet(covs_norm,shp,nfolds=nfolds,alpha=alpha,maxit=10000000,lambda=lambdas,weights=count2))
+
+
+  ############################################################################
+  # return all the necessary evils
+  ############################################################################
+
+  out <- list(anmax=anmax, gev.fits=gev.out, covar_normalized=covs_norm, covar_colmean=covs_col_means, covar_colstd=covs_col_sds, targets_normalized=targets_norm,
+              glmnet_cvfit_loc=glmnet_cvfit_loc, glmnet_cvfit_scale=glmnet_cvfit_scale, glmnet_cvfit_shape=glmnet_cvfit_shape, prism_rasters=prism_rasters, targets_prism=target_prism_vars,
+              metadata=metadata)
+
+  return(out)
+
+}

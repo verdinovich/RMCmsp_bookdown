@@ -1,0 +1,92 @@
+# (APPENDIX) Appendix {-}
+# Quality Control for Precipitation Annual Maximum Series {#qc}
+
+This appendix provides a suite of quality control tests to be employed to ensure the precipitation dataset does not contain erroneously large observations. Note that if an observation is flagged it is not always recommended to automatically remove that observation. Rather, a closer inspection is warranted. Are nearby stations reporting a similarly large value? Is there an historic storm that occurred on that date in the region? Build the case for why the observation needs to be thrown out. Don't build the case on why the observation needs to remain in the database. Innocent until proven guilty!
+
+## Percent Completion Test
+The annual maximum series (AMS) must have a percent completeness of at least 90% for the year for the observation to be accepted. Missing observations exceeding 10% of the year resulted in automatic removal from the dataset. 
+
+Two exceptions may be applied to allow a lower percent completeness threshold for large observations. First, if the observation exceeds the 50th percentile of the site AMS and had at least 50% completeness for the calendar year, the observation may be retained. Second, if the observation exceeds the 95th percentile of the site AMS, regardless of percent completeness, the observation may be retained. The goal behind these thresholds is to accurately capture the maximum rainfall observation for each year as much as possible. The selected thresholds are based on the quality control criteria applied in many of the NOAA Atlas 14 Volumes.
+
+## Ratio Test
+The ratio test is a simple heuristic for identifying observations that may have been recorded erroneously. The ratio of the largest and second-largest observations in the AMS is computed, and any observations exceeding a ratio of 2 are flagged for manual inspection. Flagged observations are then corroborated against event dates and magnitudes at surrounding stations. In data sparse regions a gridded dataset may be suitable for verification. 
+
+## Outlier Test
+The outlier test was implemented as a simplified outlier detection test compared to tests such as the Grubbs-Beck or Multiple Grubbs-Beck tests. Observations falling below 2 standard deviations from the median of the AMS may be removed as a low outlier. Visual inspection of the AMS plotting positions can be further evidence to warrant removal. Observations falling above 2 standard deviations from the median are flagged as high outliers and should be investigated in the same way as observations flagged in the ratio test. 
+
+## Extreme GEV Parameters
+As a qualitative quality control step, the site-specific GEV parameters can be plotted using the `plot_at_site_gev( )` function to identify sites with anomalous values. Special attention should be given to the shape parameter, as extreme positive or negative values can produce very steep or flat frequency curves that may be the result of one or more outliers. Sites flagged as having extreme GEV parameters should be reviewed for outliers to determine whether the parameters reflect genuine hydrologic behavior or are artifacts of a short and/or sparse period of record. 
+
+
+
+
+
+# Example Workflow {#example}
+
+## Using the Data from `RMCmsp`
+
+This appendix presents an example workflow using the data that comes baked into the R package. To begin, double click the RStudio Project File in the RMCmsp folder: `RMCmsp.Rproj`. This opens up an instance of RStudio. You should see "RMCmsp - RStudio" in the top left banner of RStudio. You will need to have `devtools` installed. From RStudio, type `install.packages("devtools")` into the Console. Once that is successfully installed, you should be able to run the following workflow:
+
+```{r eval=FALSE}
+library(devtools)
+load_all()
+
+# Step 1
+msp_workspace   <- msp_setup(anmax=mc_anmax, metadata=mc_meta, prism_rasters=mc_prism, subbasin_targets=mc_targets)
+plot_at_site_gev(at_site_gev = msp_workspace$gev.fits, shp=mc_shapefile)
+
+# Step 2
+msp_fit         <- fit_msp(msp_workspace=msp_workspace, covar.mod='twhitmat')
+
+# Step 3
+msp_uncert_mvn  <- msp_uncertainty(msp_fit=msp_fit, method="mvn", nsims=100)
+
+# Step 4
+msp_sims_mvn    <- simulate_from_msp(msp_uncertainty=msp_uncert_mvn, msp_fit=msp_fit, nsims=10000, subbasin_targets=mc_targets, target_weights=mc_weights)
+
+# Bonus Functions
+msp_smoothed    <- msp_smooth(msp_sims=msp_sims_mvn)
+msp_pt_precip   <- msp_point_precip(msp_fit=msp_fit, shp=mc_shapefile, mapping_aep=0.01, tabular_aeps=NULL)
+```
+
+Easy right? :)
+
+
+## Using Your Own Data from Section \@ref(precipdata)
+
+This appendix presents an example workflow using the data you put together in Section \@ref(precipdata). To begin, double click the RStudio Project File in the RMCmsp folder: `RMCmsp.Rproj`. This opens up an instance of RStudio. You should see "RMCmsp - RStudio" in the top left banner of RStudio. You will need to have `devtools` installed. From RStudio, type `install.packages("devtools")` into the Console. Once that is successfully installed, you should be able to run the following workflow:
+
+```{r eval=FALSE}
+library(devtools)
+load_all()
+
+# Load the data
+anmax    <- read.csv(paste0(idir, "atsite-anmax-",dur,"-day.csv"))
+metad    <- read.csv(paste0(idir, "atsite-anmax-",dur,"-day-metadata.csv"))
+prism    <- readRDS(paste0(idir,  "prism_crop.rds"))
+targets0 <- read.csv(paste0(idir, "target_locations.csv"))
+weights  <- targets0$area
+targets  <- subset(targets0, select=c("lon","lat"))
+
+# shapefile is optional
+shp      <- terra::vect(paste0(idir, "basin.shp"))
+
+# Step 1
+msp_workspace   <- msp_setup(anmax=anmax, metadata=metad, prism_rasters=prism, subbasin_targets=targets)
+plot_at_site_gev(at_site_gev = msp_workspace$gev.fits, shp=shp) # if you don't have shp, just remove that argument
+
+# Step 2
+msp_fit         <- fit_msp(msp_workspace=msp_workspace, covar.mod='twhitmat')
+
+# Step 3
+msp_uncert_mvn  <- msp_uncertainty(msp_fit=msp_fit, method="mvn", nsims=100)
+
+# Step 4
+msp_sims_mvn    <- simulate_from_msp(msp_uncertainty=msp_uncert_mvn, msp_fit=msp_fit, nsims=10000, subbasin_targets=targets, target_weights=weights)
+
+# Bonus Functions
+msp_smoothed    <- msp_smooth(msp_sims=msp_sims_mvn)
+msp_pt_precip   <- msp_point_precip(msp_fit=msp_fit, shp=shp, mapping_aep=0.01, tabular_aeps=NULL)
+```
+
+Easy right? :)

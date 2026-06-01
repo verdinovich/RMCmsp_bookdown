@@ -1,0 +1,146 @@
+#' Generate uncertainty estimates for fitted MSP model
+#'
+#' @param msp_fit Object returned from fit_msp function.
+#' @param method Method by which uncertainty is quantified. Options include "mvn", "bootgen", and "bootmarg"
+#' @param nsims Number of simulations generated to quantify uncertainty
+#' @param covar.mod A character string corresponding to the covariance model in the max-stable representation. Must be one of "gauss" for the Smith's model; "whitmat", "cauchy", "powexp", "bessel" or "caugen" for the Whittle-Matern, the Cauchy, the Powered Exponential, the Bessel and the Generalized Cauchy correlation families with the Schlather's model; "brown" for Brown-Resnick processes. The geometric Gaussian and Extremal-t models with a Whittle-Matern correlation function can be fitted by passing respectively "gwhitmat" or "twhitmat". Other correlation function families are considered in a similar way.
+#'
+#' @return A list that includes a matrix of MSP model parameters, the uncertainty method used, and the output from fit_msp function (which was provided as input) for consistency.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' msp_workspace <- msp_setup(anmax, metadata, prism_file, subbasin_targets)
+#' msp_model     <- fit_msp(msp_workspace, covar.mod='twhitmat')
+#' msp_mvn_unc   <- msp_uncertainty(msp_model, method="mvn", nsims=300)
+#' }
+msp_uncertainty <- function(msp_fit, method=c("mvn","boot"), nsims=300, covar.mod=NULL){
+  if(method == "mvn"){
+
+    ##########################################################################
+    # Use multivariate normal distribution with fitted values and
+    # standard errors from general msp MODEL to simulate parameter sets
+    ##########################################################################
+
+    covars <- msp_fit$msp_workspace$covar_normalized
+
+    # get scale_prism_pts
+    scl.mat <- as.matrix(stats::coef(msp_fit$msp_workspace$glmnet_cvfit_scale))
+    scale.vars <- row.names(scl.mat)[scl.mat != 0]
+    scale.prism.id <- numeric(length(scale.vars[-1]))
+    for(i in 1:length(scale.prism.id)) scale.prism.id[i] <- which(colnames(covars) %in% scale.vars[i+1])
+    scale.covs <- cbind(1, covars[,scale.prism.id])
+    scale.id <- grep("scale", names(msp_fit$general_msp$fitted.values))
+
+    # sample from parameter uncertainty
+    param_samples <- matrix(NA, nrow=nsims, ncol=length(msp_fit$general_msp$fitted.values))
+
+    # get spatial process indices for positive support check
+    spat.id <- which(names(msp_fit$general_msp$fitted.values) %in% c("range", "smooth", "DoF"))
+
+    # begin loop over all bootstrap samples
+    for(i in 1:nrow(param_samples)){
+      samp <- MASS::mvrnorm(n=1, mu=msp_fit$general_msp$fitted.values, Sigma=msp_fit$general_msp$var.cov)
+
+      # spatial processes require positive support, also resulting estimated GEV scale parameter
+      while(any(samp[spat.id] <= 0) | any(scale.covs %*% samp[scale.id] <= 0)){
+        samp <- MASS::mvrnorm(n=1, mu=msp_fit$general_msp$fitted.values, Sigma=msp_fit$general_msp$var.cov)
+      }
+
+      # save sampled parameter set and repeat
+      param_samples[i,] <- samp
+    }
+
+    # define which variable each parameter is for :)
+    colnames(param_samples) <- names(msp_fit$general_msp$fitted.values)
+
+    # return the msp model samples and the msp model fit objects
+    return(list(param_samples = param_samples, uncertainty_method = method, msp_fit = msp_fit))
+
+  }
+
+  if(method == "boot"){
+
+    print("Preparing to bootstrap the general MSP model. This will take a while...")
+
+    # Set default covariance model, or make sure user chose one that is supported
+    if(is.null(covar.mod)){
+      covar.mod <- "twhitmat"
+      print("Using default covariance model: Extremal-t model with Whittle-Matern correlation function. ")
+    }else{
+      if(covar.mod %in% c("tpowexp","tcauchy","twhitmat","tbessel","tcaugen")){
+        print(paste("User defined covariance model:",covar.mod))
+      }else{
+        stop("Warning! User defined covariance model not included in options. Please select one of the following: tpowexp, tcauchy, twhitmat, tbessel, tcaugen")
+      }
+    }
+
+    # initialize list for the frechet distributed sampled datasets
+    sims <- list()
+    coords_norm <- subset(msp_fit$msp_workspace$covar_normalized, select=c("X.pts","Y.pts"))
+
+    for(i in 1:nsims) {
+      sims[[i]] <- SpatialExtremes::rmaxstab(nrow(msp_fit$msp_workspace$anmax), coords_norm, cov.mod=covar.mod,
+                                             range=as.numeric(msp_fit$general_msp$fitted.values[1]),
+                                             smooth=as.numeric(msp_fit$general_msp$fitted.values[2]),
+                                             DoF=as.numeric(msp_fit$general_msp$fitted.values[3]),
+                                             nugget=0)
+
+      sims[[i]][is.na(msp_fit$msp_workspace$anmax)] <- NA
+    }
+
+    # transform the simulated observation data (sims) to GEV space (sims_gev)
+    sims_gev <- sims
+
+    # Use predict function to get GEV locs, scales, and shapes for each of the observation site locations
+    preds  <- stats::predict(msp_fit$general_msp)
+    locs   <- preds[,"loc"]
+    scales <- preds[,"scale"]
+    shapes <- preds[,"shape"]
+
+    for(i in 1:nsims) {
+      for(j in 1:ncol(msp_fit$msp_workspace$anmax)){
+        sims_gev[[i]][,j] <- SpatialExtremes::frech2gev(sims[[i]][,j],locs[j],scales[j],shapes[j])
+      }
+    }
+
+    start_general <- c(as.list(msp_fit$general_msp$fitted.values))
+
+    ###parallel setup
+    n.cores <- ceiling(parallel::detectCores() / 2)
+    #create the cluster
+    my.cluster <- parallel::makeCluster(
+      n.cores,
+      type = "PSOCK"
+    )
+
+    #register it to be used by %dopar%
+    doParallel::registerDoParallel(cl = my.cluster)
+    `%dopar%` <- foreach::`%dopar%`
+
+    # generate lists for simple msp fits (sfits), spatial gev fits (spfits), and general msp fits (fits)
+    fits = foreach::foreach(i = 1:nsims,.errorhandling = "pass",.packages="SpatialExtremes" ) %dopar% {
+      tryCatch({SpatialExtremes::fitmaxstab(data=sims_gev[[i]], coord=coords_norm, cov.mod=covar.mod, marg.cov=msp_fit$msp_workspace$covar_normalized,
+                                            fit.marge=TRUE, loc.form=msp_fit$general_msp$loc.form, scale.form=msp_fit$general_msp$scale.form,
+                                            shape.form=msp_fit$general_msp$shape.form, start=start_general, nugget=0)}, error = function(e) NULL)
+    }
+
+    # stop the cluster!
+    parallel::stopCluster(cl = my.cluster)
+
+    # set up output matrix of model parameters
+    param_samples <- matrix(NA,nrow=nsims,ncol=length(msp_fit$general_msp$fitted.values))
+
+    # populate output matrix of model parameters
+    for(i in 1:nrow(param_samples)){
+      param_samples[i,] = as.numeric(fits[[i]]$fitted.values)
+    }
+
+    # define which variable each parameter is for :)
+    colnames(param_samples) <- names(msp_fit$general_msp$fitted.values)
+
+    # return the msp model samples and the msp model fit objects
+    return(list(param_samples = param_samples, uncertainty_method = method, msp_fit = msp_fit))
+
+  }
+}

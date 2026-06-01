@@ -1,0 +1,8 @@
+h1:precipdata Preparing the Precipitation Database
+h2:download Download GHCNd stations
+h2:combine-and-organize-ghcnd-data Combine and Organize GHCNd Data
+h2:anmax Calculate Annual Maxima
+h2:prism PRISM Variables
+h2:targets Targets and Target Areas
+h2:setting-up-your-workspace Setting Up Your Workspace
+
