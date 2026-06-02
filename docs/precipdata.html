@@ -203,7 +203,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
             <section class="normal" id="section-">
 <div id="precipdata" class="section level1 hasAnchor" number="2">
 <h1><span class="header-section-number">Chapter 2</span> Preparing the Precipitation Database<a href="precipdata.html#precipdata" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<p>The example workflow presented in this document relies on daily precipitation observations from the Global Historical Climatology Network (GHCN; Menne et al. 2012). Download the station inventory for the GHCN-daily dataset (<a href="https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-inventory.txt">GHCNd</a>). Pull the data into a spreadsheet and save as a csv named <code>ghcnd-inventory.csv</code>. Give the columns the following names: <code>ghcnd_id</code>, <code>lat</code>, <code>lon</code>, <code>varid</code>, <code>startyr</code>, <code>endyr</code>. The <code>startyr</code> and <code>endyr</code> columns aren’t used in this analysis. Note that you need to define two sub-directories within the MSP analysis directory named <code>Data</code> and <code>input_files</code>. <code>Data</code> will hold the GHCNd station data you are going to download; <code>input_files</code> will save the</p>
+<p>The example workflow presented in this document relies on daily precipitation observations from the Global Historical Climatology Network (GHCN; Menne et al. 2012). Download the station inventory for the GHCN-daily dataset (<a href="https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-inventory.txt">GHCNd</a>). Pull the data into a spreadsheet and save as a csv named <code>ghcnd-inventory.csv</code>. Give the columns the following names: <code>ghcnd_id</code>, <code>lat</code>, <code>lon</code>, <code>varid</code>, <code>startyr</code>, <code>endyr</code>. The <code>startyr</code> and <code>endyr</code> columns aren’t used in this analysis. Note that you need to define two sub-directories within the MSP analysis directory named <code>Data</code> and <code>input_files</code>. <code>Data</code> will hold the GHCNd station data you are going to download; <code>input_files</code> will save the resulting annual maxima and metadata, along with all other required inputs for the MSP analysis.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="precipdata.html#cb2-1" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;ghcnd-inventory.csv&quot;</span>)</span>
 <span id="cb2-2"><a href="precipdata.html#cb2-2" tabindex="-1"></a><span class="fu">head</span>(df)</span></code></pre></div>
 <pre><code>##       ghcn_id     lat      lon varid startyr endyr
@@ -216,33 +216,35 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="download" class="section level2 hasAnchor" number="2.1">
 <h2><span class="header-section-number">2.1</span> Download GHCNd stations<a href="precipdata.html#download" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Plot the stations in GIS with your basin shapefile and pertinent raster data to assist in the definition of a study region surrounding the basin. Consult a hydrometeorologist (such as John England, Samantha Hartke, or Andrew Verdin) if you need help defining a bounding box. Once you have the bounding box defined, create a subset of the station inventory and download the data for those stations using the following R code (<code>0a_download_ghcnd.R</code>):</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="precipdata.html#cb4-1" tabindex="-1"></a><span class="co"># set your working directory to the folder you want to save all the GHCNd data</span></span>
-<span id="cb4-2"><a href="precipdata.html#cb4-2" tabindex="-1"></a><span class="fu">setwd</span>(“C<span class="sc">:</span><span class="er">/</span>Path<span class="sc">/</span>To<span class="sc">/</span>MSP<span class="sc">/</span>Analysis<span class="sc">/</span>Data<span class="sc">/</span>”)</span>
-<span id="cb4-3"><a href="precipdata.html#cb4-3" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="precipdata.html#cb4-4" tabindex="-1"></a><span class="co"># define the output directory - this will be the input to the MSP, call it &quot;input_data&quot;</span></span>
-<span id="cb4-5"><a href="precipdata.html#cb4-5" tabindex="-1"></a>idir <span class="ot">=</span> <span class="st">&quot;C:/Path/To/MSP/Analysis/input_data/&quot;</span></span>
-<span id="cb4-6"><a href="precipdata.html#cb4-6" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="precipdata.html#cb4-7" tabindex="-1"></a><span class="co"># read in the inventory file, do NOT put the inventory file in your data folder. </span></span>
-<span id="cb4-8"><a href="precipdata.html#cb4-8" tabindex="-1"></a>df.m <span class="ot">=</span> <span class="fu">read.csv</span>(“C<span class="sc">:</span><span class="er">/</span>Path<span class="sc">/</span>To<span class="sc">/</span>MSP<span class="sc">/</span>Analysis<span class="sc">/</span>ghcnd<span class="sc">-</span>inventory.csv”)  </span>
-<span id="cb4-9"><a href="precipdata.html#cb4-9" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="precipdata.html#cb4-10" tabindex="-1"></a><span class="co"># take subset of inventory file; constrain to bounding box and only PRCP stations</span></span>
-<span id="cb4-11"><a href="precipdata.html#cb4-11" tabindex="-1"></a><span class="co"># bounding box: -85 to -82.8 longitude; 33.5 to 35.5 latitude</span></span>
-<span id="cb4-12"><a href="precipdata.html#cb4-12" tabindex="-1"></a>df.sub <span class="ot">=</span> <span class="fu">subset</span>(df.m, lon <span class="sc">&gt;</span> <span class="sc">-</span><span class="dv">85</span> <span class="sc">&amp;</span> lon <span class="sc">&lt;</span> <span class="sc">-</span><span class="fl">82.8</span> <span class="sc">&amp;</span> lat <span class="sc">&gt;</span> <span class="fl">33.5</span> <span class="sc">&amp;</span> lat <span class="sc">&lt;</span> <span class="fl">35.5</span>)</span>
-<span id="cb4-13"><a href="precipdata.html#cb4-13" tabindex="-1"></a>df.sub <span class="ot">=</span> <span class="fu">subset</span>(df.sub, varid <span class="sc">==</span> <span class="st">&quot;PRCP&quot;</span>)</span>
-<span id="cb4-14"><a href="precipdata.html#cb4-14" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="precipdata.html#cb4-15" tabindex="-1"></a><span class="co"># set up a progress bar to gauge how long it will take</span></span>
-<span id="cb4-16"><a href="precipdata.html#cb4-16" tabindex="-1"></a>pb <span class="ot">=</span> <span class="fu">txtProgressBar</span>(<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="fu">nrow</span>(df.sub),<span class="at">style=</span><span class="dv">3</span>)</span>
-<span id="cb4-17"><a href="precipdata.html#cb4-17" tabindex="-1"></a></span>
-<span id="cb4-18"><a href="precipdata.html#cb4-18" tabindex="-1"></a><span class="co"># loop through each row of the subset and attempts to download a file for that station.</span></span>
-<span id="cb4-19"><a href="precipdata.html#cb4-19" tabindex="-1"></a><span class="co"># destfile is saving it to your current working directory, use getwd() to check where</span></span>
-<span id="cb4-20"><a href="precipdata.html#cb4-20" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(df.sub)){</span>
-<span id="cb4-21"><a href="precipdata.html#cb4-21" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
-<span id="cb4-22"><a href="precipdata.html#cb4-22" tabindex="-1"></a>  <span class="fu">download.file</span>(<span class="at">url=</span><span class="fu">paste0</span>(<span class="st">&quot;https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/&quot;</span>,df.sub<span class="sc">$</span>ghcnd_id[i],<span class="st">&quot;.csv&quot;</span>),</span>
-<span id="cb4-23"><a href="precipdata.html#cb4-23" tabindex="-1"></a>                <span class="at">destfile=</span><span class="fu">paste0</span>(df.sub<span class="sc">$</span>ghcnd_id[i],<span class="st">&quot;.csv&quot;</span>))</span>
-<span id="cb4-24"><a href="precipdata.html#cb4-24" tabindex="-1"></a>}</span>
-<span id="cb4-25"><a href="precipdata.html#cb4-25" tabindex="-1"></a></span>
-<span id="cb4-26"><a href="precipdata.html#cb4-26" tabindex="-1"></a><span class="co"># save the subset file for later use. do NOT save the subset file to the data folder</span></span>
-<span id="cb4-27"><a href="precipdata.html#cb4-27" tabindex="-1"></a><span class="fu">write.csv</span>(df.sub, <span class="fu">paste0</span>(idir, <span class="st">&quot;GHCNd-metadata.csv&quot;</span>), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="precipdata.html#cb4-1" tabindex="-1"></a><span class="fu">library</span>(curl)</span>
+<span id="cb4-2"><a href="precipdata.html#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="precipdata.html#cb4-3" tabindex="-1"></a><span class="co"># set your working directory to the folder you want to save all the GHCNd data</span></span>
+<span id="cb4-4"><a href="precipdata.html#cb4-4" tabindex="-1"></a><span class="fu">setwd</span>(<span class="st">&quot;C:/Path/To/MSP/Analysis/Data/&quot;</span>)</span>
+<span id="cb4-5"><a href="precipdata.html#cb4-5" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="precipdata.html#cb4-6" tabindex="-1"></a><span class="co"># define the output directory - this will be the input to the MSP, call it &quot;input_data&quot;</span></span>
+<span id="cb4-7"><a href="precipdata.html#cb4-7" tabindex="-1"></a>idir <span class="ot">=</span> <span class="st">&quot;C:/Path/To/MSP/Analysis/input_data/&quot;</span></span>
+<span id="cb4-8"><a href="precipdata.html#cb4-8" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="precipdata.html#cb4-9" tabindex="-1"></a><span class="co"># read in the inventory file, do NOT put the inventory file in your data folder. </span></span>
+<span id="cb4-10"><a href="precipdata.html#cb4-10" tabindex="-1"></a>df.m <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">&quot;C:/Path/To/MSP/Analysis/ghcnd-inventory.csv&quot;</span>)  </span>
+<span id="cb4-11"><a href="precipdata.html#cb4-11" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="precipdata.html#cb4-12" tabindex="-1"></a><span class="co"># take subset of inventory file; constrain to bounding box and only PRCP stations</span></span>
+<span id="cb4-13"><a href="precipdata.html#cb4-13" tabindex="-1"></a><span class="co"># change your bounding box as required!</span></span>
+<span id="cb4-14"><a href="precipdata.html#cb4-14" tabindex="-1"></a>df.sub <span class="ot">=</span> <span class="fu">subset</span>(df.m, lon <span class="sc">&gt;</span> <span class="sc">-</span><span class="dv">85</span> <span class="sc">&amp;</span> lon <span class="sc">&lt;</span> <span class="sc">-</span><span class="fl">82.8</span> <span class="sc">&amp;</span> lat <span class="sc">&gt;</span> <span class="fl">33.5</span> <span class="sc">&amp;</span> lat <span class="sc">&lt;</span> <span class="fl">35.5</span>)</span>
+<span id="cb4-15"><a href="precipdata.html#cb4-15" tabindex="-1"></a>df.sub <span class="ot">=</span> <span class="fu">subset</span>(df.sub, varid <span class="sc">==</span> <span class="st">&quot;PRCP&quot;</span>)</span>
+<span id="cb4-16"><a href="precipdata.html#cb4-16" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="precipdata.html#cb4-17" tabindex="-1"></a><span class="co"># set up a progress bar to gauge how long it will take</span></span>
+<span id="cb4-18"><a href="precipdata.html#cb4-18" tabindex="-1"></a>pb <span class="ot">=</span> <span class="fu">txtProgressBar</span>(<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="fu">nrow</span>(df.sub),<span class="at">style=</span><span class="dv">3</span>)</span>
+<span id="cb4-19"><a href="precipdata.html#cb4-19" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="precipdata.html#cb4-20" tabindex="-1"></a><span class="co"># loop through each row of the subset and attempts to download a file for that station.</span></span>
+<span id="cb4-21"><a href="precipdata.html#cb4-21" tabindex="-1"></a><span class="co"># destfile is saving it to your current working directory, use getwd() to check where</span></span>
+<span id="cb4-22"><a href="precipdata.html#cb4-22" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(df.sub)){</span>
+<span id="cb4-23"><a href="precipdata.html#cb4-23" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
+<span id="cb4-24"><a href="precipdata.html#cb4-24" tabindex="-1"></a>  <span class="fu">curl_download</span>(<span class="at">url=</span><span class="fu">paste0</span>(<span class="st">&quot;https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/&quot;</span>,df.sub<span class="sc">$</span>ghcnd_id[i],<span class="st">&quot;.csv&quot;</span>),</span>
+<span id="cb4-25"><a href="precipdata.html#cb4-25" tabindex="-1"></a>                <span class="at">destfile=</span><span class="fu">paste0</span>(df.sub<span class="sc">$</span>ghcnd_id[i],<span class="st">&quot;.csv&quot;</span>))</span>
+<span id="cb4-26"><a href="precipdata.html#cb4-26" tabindex="-1"></a>}</span>
+<span id="cb4-27"><a href="precipdata.html#cb4-27" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="precipdata.html#cb4-28" tabindex="-1"></a><span class="co"># save the subset file for later use. do NOT save the subset file to the data folder</span></span>
+<span id="cb4-29"><a href="precipdata.html#cb4-29" tabindex="-1"></a><span class="fu">write.csv</span>(df.sub, <span class="fu">paste0</span>(idir, <span class="st">&quot;GHCNd-metadata.csv&quot;</span>), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
 <div id="combine-and-organize-ghcnd-data" class="section level2 hasAnchor" number="2.2">
 <h2><span class="header-section-number">2.2</span> Combine and Organize GHCNd Data<a href="precipdata.html#combine-and-organize-ghcnd-data" class="anchor-section" aria-label="Anchor link to header"></a></h2>
@@ -254,40 +256,43 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb5-5"><a href="precipdata.html#cb5-5" tabindex="-1"></a>df.meta <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir,<span class="st">&quot;GHCNd-metadata.csv&quot;</span>))</span>
 <span id="cb5-6"><a href="precipdata.html#cb5-6" tabindex="-1"></a></span>
 <span id="cb5-7"><a href="precipdata.html#cb5-7" tabindex="-1"></a><span class="co"># fn is a list of all filenames; fns is the same with “.csv” removed (just site ID)</span></span>
-<span id="cb5-8"><a href="precipdata.html#cb5-8" tabindex="-1"></a>fn <span class="ot">=</span> <span class="fu">list.files</span>(<span class="at">pattern=</span>”.csv”)</span>
+<span id="cb5-8"><a href="precipdata.html#cb5-8" tabindex="-1"></a>fn <span class="ot">=</span> <span class="fu">list.files</span>(<span class="at">pattern=</span><span class="st">&quot;.csv&quot;</span>)</span>
 <span id="cb5-9"><a href="precipdata.html#cb5-9" tabindex="-1"></a>fns <span class="ot">=</span> <span class="fu">unlist</span>(<span class="fu">strsplit</span>(fn, <span class="at">split=</span><span class="st">&quot;.csv&quot;</span>))</span>
 <span id="cb5-10"><a href="precipdata.html#cb5-10" tabindex="-1"></a></span>
 <span id="cb5-11"><a href="precipdata.html#cb5-11" tabindex="-1"></a><span class="co"># start with some arbitrary min and max dates – update as needed for your analysis</span></span>
-<span id="cb5-12"><a href="precipdata.html#cb5-12" tabindex="-1"></a>mind <span class="ot">=</span> <span class="fu">ymd</span>(“<span class="dv">2005-01-01</span>”)</span>
-<span id="cb5-13"><a href="precipdata.html#cb5-13" tabindex="-1"></a>maxd <span class="ot">=</span> <span class="fu">ymd</span>(“<span class="dv">2005-12-31</span>”)</span>
+<span id="cb5-12"><a href="precipdata.html#cb5-12" tabindex="-1"></a>mind <span class="ot">=</span> <span class="fu">ymd</span>(<span class="st">&quot;2005-01-01&quot;</span>)</span>
+<span id="cb5-13"><a href="precipdata.html#cb5-13" tabindex="-1"></a>maxd <span class="ot">=</span> <span class="fu">ymd</span>(<span class="st">&quot;2005-12-31&quot;</span>)</span>
 <span id="cb5-14"><a href="precipdata.html#cb5-14" tabindex="-1"></a></span>
 <span id="cb5-15"><a href="precipdata.html#cb5-15" tabindex="-1"></a><span class="co"># loop through and update ‘mind’ and ‘maxd’ variables as needed</span></span>
-<span id="cb5-16"><a href="precipdata.html#cb5-16" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(fn)){</span>
-<span id="cb5-17"><a href="precipdata.html#cb5-17" tabindex="-1"></a>  df <span class="ot">=</span> <span class="fu">read.csv</span>(fn[i])</span>
-<span id="cb5-18"><a href="precipdata.html#cb5-18" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">min</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE)) <span class="sc">&lt;</span> mind) mind <span class="ot">=</span> <span class="fu">min</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE))</span>
-<span id="cb5-19"><a href="precipdata.html#cb5-19" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">max</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE)) <span class="sc">&gt;</span> maxd) maxd <span class="ot">=</span> <span class="fu">max</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE))</span>
-<span id="cb5-20"><a href="precipdata.html#cb5-20" tabindex="-1"></a>}</span>
-<span id="cb5-21"><a href="precipdata.html#cb5-21" tabindex="-1"></a></span>
-<span id="cb5-22"><a href="precipdata.html#cb5-22" tabindex="-1"></a><span class="co"># define vector of all dates, and the matrix that will hold all the data</span></span>
-<span id="cb5-23"><a href="precipdata.html#cb5-23" tabindex="-1"></a>full_dates <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="at">DATE=</span><span class="fu">seq.Date</span>(<span class="at">from=</span><span class="fu">ymd</span>(mind), <span class="at">to=</span><span class="fu">ymd</span>(maxd), <span class="at">by=</span>”day”))</span>
-<span id="cb5-24"><a href="precipdata.html#cb5-24" tabindex="-1"></a>df.daily <span class="ot">=</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow=</span><span class="fu">nrow</span>(full_dates), <span class="at">ncol=</span><span class="fu">length</span>(fn))</span>
-<span id="cb5-25"><a href="precipdata.html#cb5-25" tabindex="-1"></a></span>
-<span id="cb5-26"><a href="precipdata.html#cb5-26" tabindex="-1"></a><span class="co"># loop through and populate that matrix</span></span>
-<span id="cb5-27"><a href="precipdata.html#cb5-27" tabindex="-1"></a>pb <span class="ot">=</span> <span class="fu">txtProgressBar</span>(<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="fu">ncol</span>(df.daily),<span class="at">style=</span><span class="dv">3</span>)</span>
-<span id="cb5-28"><a href="precipdata.html#cb5-28" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(df.daily)){</span>
-<span id="cb5-29"><a href="precipdata.html#cb5-29" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
-<span id="cb5-30"><a href="precipdata.html#cb5-30" tabindex="-1"></a>  tmp <span class="ot">=</span> <span class="fu">read.csv</span>(fn[i])</span>
-<span id="cb5-31"><a href="precipdata.html#cb5-31" tabindex="-1"></a>  sub <span class="ot">=</span> <span class="fu">subset</span>(tmp, <span class="at">select=</span><span class="fu">c</span>(<span class="st">&quot;DATE&quot;</span>,<span class="st">&quot;PRCP&quot;</span>))</span>
-<span id="cb5-32"><a href="precipdata.html#cb5-32" tabindex="-1"></a>  sub<span class="sc">$</span>DATE <span class="ot">=</span> <span class="fu">ymd</span>(sub<span class="sc">$</span>DATE)</span>
-<span id="cb5-33"><a href="precipdata.html#cb5-33" tabindex="-1"></a>  tmp.full <span class="ot">=</span> <span class="fu">join</span>(full_dates, sub, <span class="at">by=</span><span class="st">&quot;DATE&quot;</span>)</span>
-<span id="cb5-34"><a href="precipdata.html#cb5-34" tabindex="-1"></a>  df.daily[,i] <span class="ot">=</span> tmp.full<span class="sc">$</span>PRCP</span>
-<span id="cb5-35"><a href="precipdata.html#cb5-35" tabindex="-1"></a>}</span>
-<span id="cb5-36"><a href="precipdata.html#cb5-36" tabindex="-1"></a></span>
-<span id="cb5-37"><a href="precipdata.html#cb5-37" tabindex="-1"></a><span class="co"># put the station id in the column name</span></span>
-<span id="cb5-38"><a href="precipdata.html#cb5-38" tabindex="-1"></a><span class="fu">colnames</span>(df.daily) <span class="ot">=</span> fns</span>
+<span id="cb5-16"><a href="precipdata.html#cb5-16" tabindex="-1"></a>pb <span class="ot">=</span> <span class="fu">txtProgressBar</span>(<span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">length</span>(fn), <span class="at">style=</span><span class="dv">3</span>)</span>
+<span id="cb5-17"><a href="precipdata.html#cb5-17" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(fn)){</span>
+<span id="cb5-18"><a href="precipdata.html#cb5-18" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
+<span id="cb5-19"><a href="precipdata.html#cb5-19" tabindex="-1"></a>  </span>
+<span id="cb5-20"><a href="precipdata.html#cb5-20" tabindex="-1"></a>  df <span class="ot">=</span> <span class="fu">read.csv</span>(fn[i])</span>
+<span id="cb5-21"><a href="precipdata.html#cb5-21" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">min</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE)) <span class="sc">&lt;</span> mind) mind <span class="ot">=</span> <span class="fu">min</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE))</span>
+<span id="cb5-22"><a href="precipdata.html#cb5-22" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">max</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE)) <span class="sc">&gt;</span> maxd) maxd <span class="ot">=</span> <span class="fu">max</span>(<span class="fu">ymd</span>(df<span class="sc">$</span>DATE))</span>
+<span id="cb5-23"><a href="precipdata.html#cb5-23" tabindex="-1"></a>}</span>
+<span id="cb5-24"><a href="precipdata.html#cb5-24" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="precipdata.html#cb5-25" tabindex="-1"></a><span class="co"># define vector of all dates, and the matrix that will hold all the data</span></span>
+<span id="cb5-26"><a href="precipdata.html#cb5-26" tabindex="-1"></a>full_dates <span class="ot">=</span> <span class="fu">data.frame</span>(<span class="at">DATE=</span><span class="fu">seq.Date</span>(<span class="at">from=</span><span class="fu">ymd</span>(mind), <span class="at">to=</span><span class="fu">ymd</span>(maxd), <span class="at">by=</span><span class="st">&quot;day&quot;</span>))</span>
+<span id="cb5-27"><a href="precipdata.html#cb5-27" tabindex="-1"></a>df.daily <span class="ot">=</span> <span class="fu">matrix</span>(<span class="cn">NA</span>, <span class="at">nrow=</span><span class="fu">nrow</span>(full_dates), <span class="at">ncol=</span><span class="fu">length</span>(fn))</span>
+<span id="cb5-28"><a href="precipdata.html#cb5-28" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="precipdata.html#cb5-29" tabindex="-1"></a><span class="co"># loop through and populate that matrix</span></span>
+<span id="cb5-30"><a href="precipdata.html#cb5-30" tabindex="-1"></a>pb <span class="ot">=</span> <span class="fu">txtProgressBar</span>(<span class="at">min=</span><span class="dv">0</span>,<span class="at">max=</span><span class="fu">ncol</span>(df.daily),<span class="at">style=</span><span class="dv">3</span>)</span>
+<span id="cb5-31"><a href="precipdata.html#cb5-31" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">ncol</span>(df.daily)){</span>
+<span id="cb5-32"><a href="precipdata.html#cb5-32" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
+<span id="cb5-33"><a href="precipdata.html#cb5-33" tabindex="-1"></a>  tmp <span class="ot">=</span> <span class="fu">read.csv</span>(fn[i])</span>
+<span id="cb5-34"><a href="precipdata.html#cb5-34" tabindex="-1"></a>  sub <span class="ot">=</span> <span class="fu">subset</span>(tmp, <span class="at">select=</span><span class="fu">c</span>(<span class="st">&quot;DATE&quot;</span>,<span class="st">&quot;PRCP&quot;</span>))</span>
+<span id="cb5-35"><a href="precipdata.html#cb5-35" tabindex="-1"></a>  sub<span class="sc">$</span>DATE <span class="ot">=</span> <span class="fu">ymd</span>(sub<span class="sc">$</span>DATE)</span>
+<span id="cb5-36"><a href="precipdata.html#cb5-36" tabindex="-1"></a>  tmp.full <span class="ot">=</span> <span class="fu">join</span>(full_dates, sub, <span class="at">by=</span><span class="st">&quot;DATE&quot;</span>)</span>
+<span id="cb5-37"><a href="precipdata.html#cb5-37" tabindex="-1"></a>  df.daily[,i] <span class="ot">=</span> tmp.full<span class="sc">$</span>PRCP</span>
+<span id="cb5-38"><a href="precipdata.html#cb5-38" tabindex="-1"></a>}</span>
 <span id="cb5-39"><a href="precipdata.html#cb5-39" tabindex="-1"></a></span>
-<span id="cb5-40"><a href="precipdata.html#cb5-40" tabindex="-1"></a><span class="co"># save it. do NOT save the data matrix to the data folder</span></span>
-<span id="cb5-41"><a href="precipdata.html#cb5-41" tabindex="-1"></a><span class="fu">write.csv</span>(df.daily, <span class="fu">paste0</span>(idir,“ghcn<span class="sc">-</span>daily.csv”), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<span id="cb5-40"><a href="precipdata.html#cb5-40" tabindex="-1"></a><span class="co"># put the station id in the column name</span></span>
+<span id="cb5-41"><a href="precipdata.html#cb5-41" tabindex="-1"></a><span class="fu">colnames</span>(df.daily) <span class="ot">=</span> fns</span>
+<span id="cb5-42"><a href="precipdata.html#cb5-42" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="precipdata.html#cb5-43" tabindex="-1"></a><span class="co"># save it. do NOT save the data matrix to the data folder</span></span>
+<span id="cb5-44"><a href="precipdata.html#cb5-44" tabindex="-1"></a><span class="fu">write.csv</span>(df.daily, <span class="fu">paste0</span>(idir,<span class="st">&quot;ghcn-daily.csv&quot;</span>), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
 <div id="anmax" class="section level2 hasAnchor" number="2.3">
 <h2><span class="header-section-number">2.3</span> Calculate Annual Maxima<a href="precipdata.html#anmax" class="anchor-section" aria-label="Anchor link to header"></a></h2>
@@ -320,8 +325,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb7-4"><a href="precipdata.html#cb7-4" tabindex="-1"></a>df.meta.out <span class="ot">=</span> df.meta[min.id,]</span>
 <span id="cb7-5"><a href="precipdata.html#cb7-5" tabindex="-1"></a></span>
 <span id="cb7-6"><a href="precipdata.html#cb7-6" tabindex="-1"></a><span class="co"># save it. do NOT save the annual maxima to the data folder</span></span>
-<span id="cb7-7"><a href="precipdata.html#cb7-7" tabindex="-1"></a><span class="fu">write.csv</span>(anmax.out2, <span class="fu">paste0</span>(idir,“atsite<span class="sc">-</span>anmax<span class="sc">-</span>“,dur,”<span class="sc">-</span>day.csv”), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span>
-<span id="cb7-8"><a href="precipdata.html#cb7-8" tabindex="-1"></a><span class="fu">write.csv</span>(df.meta.out, <span class="fu">paste0</span>(idir,“atsite<span class="sc">-</span>anmax<span class="sc">-</span>“,dur,”<span class="sc">-</span>day<span class="sc">-</span>metadata.csv”), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<span id="cb7-7"><a href="precipdata.html#cb7-7" tabindex="-1"></a><span class="fu">write.csv</span>(anmax.out2, <span class="fu">paste0</span>(idir,<span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day.csv&quot;</span>), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span>
+<span id="cb7-8"><a href="precipdata.html#cb7-8" tabindex="-1"></a><span class="fu">write.csv</span>(df.meta.out, <span class="fu">paste0</span>(idir,<span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day-metadata.csv&quot;</span>), <span class="at">row.names=</span><span class="cn">FALSE</span>)</span></code></pre></div>
 </div>
 <div id="prism" class="section level2 hasAnchor" number="2.4">
 <h2><span class="header-section-number">2.4</span> PRISM Variables<a href="precipdata.html#prism" class="anchor-section" aria-label="Anchor link to header"></a></h2>
@@ -330,54 +335,58 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="precipdata.html#cb8-1" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_url</span>(<span class="st">&quot;https://prism.oregonstate.edu/normals/&quot;</span>)</span></code></pre></div>
 <iframe src="https://prism.oregonstate.edu/normals/" width="672" height="400px" data-external="1">
 </iframe>
-<p>Once all data have been downloaded, you can use the following code to crop them to a user-defined bounding box and save them all in an <code>.RData</code> file.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="precipdata.html#cb9-1" tabindex="-1"></a><span class="fu">library</span>(raster)</span>
-<span id="cb9-2"><a href="precipdata.html#cb9-2" tabindex="-1"></a><span class="fu">library</span>(sp)</span>
-<span id="cb9-3"><a href="precipdata.html#cb9-3" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="precipdata.html#cb9-4" tabindex="-1"></a><span class="co"># set datadir to directory where PRISM was downloaded</span></span>
-<span id="cb9-5"><a href="precipdata.html#cb9-5" tabindex="-1"></a>datadir <span class="ot">=</span> <span class="st">&quot;C:/Path/To/PRISM/Data/&quot;</span></span>
-<span id="cb9-6"><a href="precipdata.html#cb9-6" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="precipdata.html#cb9-7" tabindex="-1"></a><span class="co"># load the metadata from the previous step</span></span>
-<span id="cb9-8"><a href="precipdata.html#cb9-8" tabindex="-1"></a>meta    <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir,<span class="st">&quot;/atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day-metadata.csv&quot;</span>))</span>
-<span id="cb9-9"><a href="precipdata.html#cb9-9" tabindex="-1"></a></span>
-<span id="cb9-10"><a href="precipdata.html#cb9-10" tabindex="-1"></a><span class="co"># these are the raster variables we&#39;re going to use - DO NOT MODIFY THESE TWO LINES</span></span>
-<span id="cb9-11"><a href="precipdata.html#cb9-11" tabindex="-1"></a>raster_vars <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;ppt&quot;</span>, <span class="st">&quot;tmean&quot;</span>, <span class="st">&quot;tmax&quot;</span>, <span class="st">&quot;tmin&quot;</span>, <span class="st">&quot;tdmean&quot;</span>, <span class="st">&quot;vpdmax&quot;</span>, <span class="st">&quot;vpdmin&quot;</span>, <span class="st">&quot;solclear&quot;</span>, <span class="st">&quot;solslope&quot;</span>, <span class="st">&quot;soltotal&quot;</span>, <span class="st">&quot;soltrans&quot;</span>)</span>
-<span id="cb9-12"><a href="precipdata.html#cb9-12" tabindex="-1"></a>m_vars <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">3</span>)</span>
-<span id="cb9-13"><a href="precipdata.html#cb9-13" tabindex="-1"></a></span>
-<span id="cb9-14"><a href="precipdata.html#cb9-14" tabindex="-1"></a><span class="co"># read in the first prism file </span></span>
-<span id="cb9-15"><a href="precipdata.html#cb9-15" tabindex="-1"></a>prism_file <span class="ot">=</span> <span class="fu">paste0</span>(datadir,<span class="st">&quot;/PRISM_VARIABLE_30yr_normal_800mM5_annual_asc.asc&quot;</span>)</span>
-<span id="cb9-16"><a href="precipdata.html#cb9-16" tabindex="-1"></a></span>
-<span id="cb9-17"><a href="precipdata.html#cb9-17" tabindex="-1"></a><span class="co"># Define the bounding box with extra buffer to avoid NA at stations</span></span>
-<span id="cb9-18"><a href="precipdata.html#cb9-18" tabindex="-1"></a>lon_min <span class="ot">=</span> <span class="fu">floor</span>(<span class="fu">min</span>(meta<span class="sc">$</span>lon))</span>
-<span id="cb9-19"><a href="precipdata.html#cb9-19" tabindex="-1"></a>lon_max <span class="ot">=</span> <span class="fu">ceiling</span>(<span class="fu">max</span>(meta<span class="sc">$</span>lon))</span>
-<span id="cb9-20"><a href="precipdata.html#cb9-20" tabindex="-1"></a>lat_min <span class="ot">=</span> <span class="fu">floor</span>(<span class="fu">min</span>(meta<span class="sc">$</span>lat))</span>
-<span id="cb9-21"><a href="precipdata.html#cb9-21" tabindex="-1"></a>lat_max <span class="ot">=</span> <span class="fu">ceiling</span>(<span class="fu">max</span>(meta<span class="sc">$</span>lat))</span>
-<span id="cb9-22"><a href="precipdata.html#cb9-22" tabindex="-1"></a></span>
-<span id="cb9-23"><a href="precipdata.html#cb9-23" tabindex="-1"></a><span class="co"># Define the extent of the bounding box</span></span>
-<span id="cb9-24"><a href="precipdata.html#cb9-24" tabindex="-1"></a>bbox_extent <span class="ot">=</span> <span class="fu">extent</span>(lon_min, lon_max, lat_min, lat_max)</span>
-<span id="cb9-25"><a href="precipdata.html#cb9-25" tabindex="-1"></a></span>
-<span id="cb9-26"><a href="precipdata.html#cb9-26" tabindex="-1"></a><span class="co"># loop through all raster variables, modify the string/filename, read and crop</span></span>
-<span id="cb9-27"><a href="precipdata.html#cb9-27" tabindex="-1"></a><span class="co"># assign puts the cropped prism data into that variable name for convenience :)</span></span>
-<span id="cb9-28"><a href="precipdata.html#cb9-28" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(raster_vars)){</span>
-<span id="cb9-29"><a href="precipdata.html#cb9-29" tabindex="-1"></a>  var <span class="ot">=</span> raster_vars[i]</span>
-<span id="cb9-30"><a href="precipdata.html#cb9-30" tabindex="-1"></a>  modified_string <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;VARIABLE&quot;</span>, var, prism_file)</span>
-<span id="cb9-31"><a href="precipdata.html#cb9-31" tabindex="-1"></a>  PRISM_data <span class="ot">=</span> <span class="fu">raster</span>(<span class="fu">gsub</span>(<span class="st">&#39;5&#39;</span>,m_vars[i], modified_string))</span>
-<span id="cb9-32"><a href="precipdata.html#cb9-32" tabindex="-1"></a>  </span>
-<span id="cb9-33"><a href="precipdata.html#cb9-33" tabindex="-1"></a>  PRISM_data <span class="ot">&lt;-</span> <span class="fu">crop</span>(PRISM_data, bbox_extent) <span class="co"># Crop the raster using the extent</span></span>
-<span id="cb9-34"><a href="precipdata.html#cb9-34" tabindex="-1"></a>  </span>
-<span id="cb9-35"><a href="precipdata.html#cb9-35" tabindex="-1"></a>  <span class="fu">assign</span>(var, PRISM_data)</span>
-<span id="cb9-36"><a href="precipdata.html#cb9-36" tabindex="-1"></a>}</span>
-<span id="cb9-37"><a href="precipdata.html#cb9-37" tabindex="-1"></a></span>
-<span id="cb9-38"><a href="precipdata.html#cb9-38" tabindex="-1"></a><span class="co"># read in the DEM and crop</span></span>
-<span id="cb9-39"><a href="precipdata.html#cb9-39" tabindex="-1"></a>PRISM_us_dem_800m_r <span class="ot">=</span> <span class="fu">raster</span>(<span class="fu">paste0</span>(datadir,<span class="st">&quot;/PRISM_us_dem_800m_bil.bil&quot;</span>))</span>
-<span id="cb9-40"><a href="precipdata.html#cb9-40" tabindex="-1"></a>PRISM_us_dem_800m_r <span class="ot">=</span> <span class="fu">crop</span>(PRISM_us_dem_800m_r, bbox_extent) </span>
-<span id="cb9-41"><a href="precipdata.html#cb9-41" tabindex="-1"></a></span>
-<span id="cb9-42"><a href="precipdata.html#cb9-42" tabindex="-1"></a><span class="co"># put them all in a list and save as RDS file</span></span>
-<span id="cb9-43"><a href="precipdata.html#cb9-43" tabindex="-1"></a>list.out <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">Z =</span> PRISM_us_dem_800m_r,</span>
-<span id="cb9-44"><a href="precipdata.html#cb9-44" tabindex="-1"></a>                 <span class="at">ppt =</span> ppt, <span class="at">tmean =</span> tmean, <span class="at">tmax =</span> tmax, <span class="at">tmin =</span> tmin, <span class="at">tdmean =</span> tdmean,</span>
-<span id="cb9-45"><a href="precipdata.html#cb9-45" tabindex="-1"></a>                 <span class="at">vpdmax =</span> vpdmax, <span class="at">vpdmin =</span> vpdmin, <span class="at">solclear =</span> solclear, <span class="at">solslope =</span> solslope,</span>
-<span id="cb9-46"><a href="precipdata.html#cb9-46" tabindex="-1"></a>                 <span class="at">soltotal =</span> soltotal, <span class="at">soltrans =</span> soltrans)</span>
-<span id="cb9-47"><a href="precipdata.html#cb9-47" tabindex="-1"></a><span class="fu">saveRDS</span>(list.out, <span class="fu">paste0</span>(idir,<span class="st">&quot;/prism_crop.rds&quot;</span>)</span></code></pre></div>
+<p>I just went back to the PRISM website while working through this document, and there is no more <code>Download All Normals Data (.bil)</code> option. Also, the solar irradiance variables are unavailable. You can download all the PRISM data you need for this analysis here:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="precipdata.html#cb9-1" tabindex="-1"></a>\\CPC<span class="sc">-</span>Netapp3.eis.ds.usace.army.mil\RMC\RMC<span class="sc">-</span>HECSA\TRANSFER\RMC\Verdin\RMCmsp_v1<span class="fl">.0</span>_beta\PRISM_MSP</span></code></pre></div>
+<p>Once all data have been downloaded, you can use the following code (<code>0d_crop_prism.R</code>) to crop them to a user-defined bounding box and save them all in an RDS file.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="precipdata.html#cb10-1" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
+<span id="cb10-2"><a href="precipdata.html#cb10-2" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="precipdata.html#cb10-3" tabindex="-1"></a><span class="co"># set datadir to directory where PRISM was downloaded</span></span>
+<span id="cb10-4"><a href="precipdata.html#cb10-4" tabindex="-1"></a>datadir <span class="ot">=</span> <span class="st">&quot;C:/Path/To/PRISM/Data/&quot;</span></span>
+<span id="cb10-5"><a href="precipdata.html#cb10-5" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="precipdata.html#cb10-6" tabindex="-1"></a><span class="co"># load the metadata from the previous step</span></span>
+<span id="cb10-7"><a href="precipdata.html#cb10-7" tabindex="-1"></a>meta <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir,<span class="st">&quot;/atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day-metadata.csv&quot;</span>))</span>
+<span id="cb10-8"><a href="precipdata.html#cb10-8" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="precipdata.html#cb10-9" tabindex="-1"></a><span class="co"># these are the raster variables we&#39;re going to use - DO NOT MODIFY THESE TWO LINES</span></span>
+<span id="cb10-10"><a href="precipdata.html#cb10-10" tabindex="-1"></a>raster_vars <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;ppt&quot;</span>, <span class="st">&quot;tmean&quot;</span>, <span class="st">&quot;tmax&quot;</span>, <span class="st">&quot;tmin&quot;</span>, <span class="st">&quot;tdmean&quot;</span>, <span class="st">&quot;vpdmax&quot;</span>, <span class="st">&quot;vpdmin&quot;</span>, <span class="st">&quot;solclear&quot;</span>, <span class="st">&quot;solslope&quot;</span>, <span class="st">&quot;soltotal&quot;</span>, <span class="st">&quot;soltrans&quot;</span>)</span>
+<span id="cb10-11"><a href="precipdata.html#cb10-11" tabindex="-1"></a>m_vars <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">5</span>, <span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">3</span>)</span>
+<span id="cb10-12"><a href="precipdata.html#cb10-12" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="precipdata.html#cb10-13" tabindex="-1"></a><span class="co"># read in the first prism file</span></span>
+<span id="cb10-14"><a href="precipdata.html#cb10-14" tabindex="-1"></a>prism_file <span class="ot">=</span> <span class="fu">paste0</span>(datadir,<span class="st">&quot;/PRISM_VARIABLE_30yr_normal_800mM5_annual_asc.asc&quot;</span>)</span>
+<span id="cb10-15"><a href="precipdata.html#cb10-15" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="precipdata.html#cb10-16" tabindex="-1"></a><span class="co"># Define the bounding box with extra buffer to avoid NA at stations</span></span>
+<span id="cb10-17"><a href="precipdata.html#cb10-17" tabindex="-1"></a>lon_min <span class="ot">=</span> <span class="fu">floor</span>(<span class="fu">min</span>(meta<span class="sc">$</span>lon))</span>
+<span id="cb10-18"><a href="precipdata.html#cb10-18" tabindex="-1"></a>lon_max <span class="ot">=</span> <span class="fu">ceiling</span>(<span class="fu">max</span>(meta<span class="sc">$</span>lon))</span>
+<span id="cb10-19"><a href="precipdata.html#cb10-19" tabindex="-1"></a>lat_min <span class="ot">=</span> <span class="fu">floor</span>(<span class="fu">min</span>(meta<span class="sc">$</span>lat))</span>
+<span id="cb10-20"><a href="precipdata.html#cb10-20" tabindex="-1"></a>lat_max <span class="ot">=</span> <span class="fu">ceiling</span>(<span class="fu">max</span>(meta<span class="sc">$</span>lat))</span>
+<span id="cb10-21"><a href="precipdata.html#cb10-21" tabindex="-1"></a></span>
+<span id="cb10-22"><a href="precipdata.html#cb10-22" tabindex="-1"></a><span class="co"># Define the extent of the bounding box</span></span>
+<span id="cb10-23"><a href="precipdata.html#cb10-23" tabindex="-1"></a>bbox_extent <span class="ot">=</span> <span class="fu">ext</span>(lon_min, lon_max, lat_min, lat_max)</span>
+<span id="cb10-24"><a href="precipdata.html#cb10-24" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="precipdata.html#cb10-25" tabindex="-1"></a><span class="co"># loop through all raster variables, modify the string/filename, read and crop</span></span>
+<span id="cb10-26"><a href="precipdata.html#cb10-26" tabindex="-1"></a><span class="co"># assign puts the cropped prism data into that variable name for convenience :)</span></span>
+<span id="cb10-27"><a href="precipdata.html#cb10-27" tabindex="-1"></a>pb <span class="ot">=</span> <span class="fu">txtProgressBar</span>(<span class="at">min=</span><span class="dv">0</span>, <span class="at">max=</span><span class="fu">length</span>(raster_vars), <span class="at">style=</span><span class="dv">3</span>)</span>
+<span id="cb10-28"><a href="precipdata.html#cb10-28" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">length</span>(raster_vars)){</span>
+<span id="cb10-29"><a href="precipdata.html#cb10-29" tabindex="-1"></a>  <span class="fu">setTxtProgressBar</span>(pb,i)</span>
+<span id="cb10-30"><a href="precipdata.html#cb10-30" tabindex="-1"></a>  </span>
+<span id="cb10-31"><a href="precipdata.html#cb10-31" tabindex="-1"></a>  var <span class="ot">=</span> raster_vars[i]</span>
+<span id="cb10-32"><a href="precipdata.html#cb10-32" tabindex="-1"></a>  modified_string <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">&quot;VARIABLE&quot;</span>, var, prism_file)</span>
+<span id="cb10-33"><a href="precipdata.html#cb10-33" tabindex="-1"></a>  PRISM_data <span class="ot">=</span> <span class="fu">rast</span>(<span class="fu">gsub</span>(<span class="st">&#39;5&#39;</span>, m_vars[i], modified_string)) </span>
+<span id="cb10-34"><a href="precipdata.html#cb10-34" tabindex="-1"></a></span>
+<span id="cb10-35"><a href="precipdata.html#cb10-35" tabindex="-1"></a>  PRISM_data <span class="ot">&lt;-</span> <span class="fu">crop</span>(PRISM_data, bbox_extent)</span>
+<span id="cb10-36"><a href="precipdata.html#cb10-36" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="precipdata.html#cb10-37" tabindex="-1"></a>  <span class="fu">assign</span>(var, PRISM_data)</span>
+<span id="cb10-38"><a href="precipdata.html#cb10-38" tabindex="-1"></a>}</span>
+<span id="cb10-39"><a href="precipdata.html#cb10-39" tabindex="-1"></a></span>
+<span id="cb10-40"><a href="precipdata.html#cb10-40" tabindex="-1"></a><span class="co"># read in the DEM and crop</span></span>
+<span id="cb10-41"><a href="precipdata.html#cb10-41" tabindex="-1"></a>PRISM_us_dem_800m_r <span class="ot">=</span> <span class="fu">rast</span>(<span class="fu">paste0</span>(datadir,<span class="st">&quot;/PRISM_us_dem_800m_bil.bil&quot;</span>))</span>
+<span id="cb10-42"><a href="precipdata.html#cb10-42" tabindex="-1"></a>PRISM_us_dem_800m_r <span class="ot">=</span> <span class="fu">crop</span>(PRISM_us_dem_800m_r, bbox_extent)</span>
+<span id="cb10-43"><a href="precipdata.html#cb10-43" tabindex="-1"></a></span>
+<span id="cb10-44"><a href="precipdata.html#cb10-44" tabindex="-1"></a><span class="co"># put them all in a list and save as RDS file</span></span>
+<span id="cb10-45"><a href="precipdata.html#cb10-45" tabindex="-1"></a>list.out <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">Z =</span> PRISM_us_dem_800m_r,</span>
+<span id="cb10-46"><a href="precipdata.html#cb10-46" tabindex="-1"></a>                 <span class="at">ppt =</span> ppt, <span class="at">tmean =</span> tmean, <span class="at">tmax =</span> tmax, <span class="at">tmin =</span> tmin, <span class="at">tdmean =</span> tdmean,</span>
+<span id="cb10-47"><a href="precipdata.html#cb10-47" tabindex="-1"></a>                 <span class="at">vpdmax =</span> vpdmax, <span class="at">vpdmin =</span> vpdmin, <span class="at">solclear =</span> solclear, <span class="at">solslope =</span> solslope,</span>
+<span id="cb10-48"><a href="precipdata.html#cb10-48" tabindex="-1"></a>                 <span class="at">soltotal =</span> soltotal, <span class="at">soltrans =</span> soltrans)</span>
+<span id="cb10-49"><a href="precipdata.html#cb10-49" tabindex="-1"></a><span class="fu">saveRDS</span>(list.out, <span class="fu">paste0</span>(idir,<span class="st">&quot;/prism_crop.rds&quot;</span>))</span></code></pre></div>
 </div>
 <div id="targets" class="section level2 hasAnchor" number="2.5">
 <h2><span class="header-section-number">2.5</span> Targets and Target Areas<a href="precipdata.html#targets" class="anchor-section" aria-label="Anchor link to header"></a></h2>
