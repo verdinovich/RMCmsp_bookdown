@@ -159,7 +159,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3" data-path="workflow.html"><a href="workflow.html"><i class="fa fa-check"></i><b>3</b> Workflow for MSP Precipitation-Frequency</a>
 <ul>
 <li class="chapter" data-level="3.1" data-path="workflow.html"><a href="workflow.html#mspsetup"><i class="fa fa-check"></i><b>3.1</b> Step 1: <code>msp_setup( )</code></a></li>
-<li class="chapter" data-level="3.2" data-path="workflow.html"><a href="workflow.html#step-2-fit_msp-fitmsp"><i class="fa fa-check"></i><b>3.2</b> Step 2: <code>fit_msp( )</code> {fitmsp}</a></li>
+<li class="chapter" data-level="3.2" data-path="workflow.html"><a href="workflow.html#fitmsp"><i class="fa fa-check"></i><b>3.2</b> Step 2: <code>fit_msp( )</code></a></li>
 <li class="chapter" data-level="3.3" data-path="workflow.html"><a href="workflow.html#mspuncertainty"><i class="fa fa-check"></i><b>3.3</b> Step 3: <code>msp_uncertainty( )</code></a></li>
 <li class="chapter" data-level="3.4" data-path="workflow.html"><a href="workflow.html#simulatefrommsp"><i class="fa fa-check"></i><b>3.4</b> Step 4: <code>simulate_from_msp( )</code></a></li>
 <li class="chapter" data-level="3.5" data-path="workflow.html"><a href="workflow.html#bonusfunctions"><i class="fa fa-check"></i><b>3.5</b> Step 5: Bonus Functions</a>
@@ -250,8 +250,8 @@ It’s lazy loaded data, which means it doesn’t show up in your environment un
 <li><code>metadata</code>: the station metadata for your project</li>
 </ol>
 </div>
-<div id="step-2-fit_msp-fitmsp" class="section level2 hasAnchor" number="3.2">
-<h2><span class="header-section-number">3.2</span> Step 2: <code>fit_msp( )</code> {fitmsp}<a href="workflow.html#step-2-fit_msp-fitmsp" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="fitmsp" class="section level2 hasAnchor" number="3.2">
+<h2><span class="header-section-number">3.2</span> Step 2: <code>fit_msp( )</code><a href="workflow.html#fitmsp" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Your workspace is now set up with everything you need to fit the MSP model! The <code>fit_msp( )</code> function takes three input parameters, but only one is really needed to get started:</p>
 <ol style="list-style-type: decimal">
 <li><code>msp_workspace</code>: The result of the <code>msp_setup( )</code> function. All the information you need to fit the MSP model is included in this one variable!</li>

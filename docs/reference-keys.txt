@@ -10,7 +10,7 @@ targets
 setting-up-your-workspace
 workflow
 mspsetup
-step-2-fit_msp-fitmsp
+fitmsp
 mspuncertainty
 simulatefrommsp
 bonusfunctions
