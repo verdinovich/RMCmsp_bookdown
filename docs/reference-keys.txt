@@ -17,7 +17,6 @@ bonusfunctions
 mspsmooth
 msppointprecip
 qc
-percent-completion-test
 ratio-test
 outlier-test
 extreme-gev-parameters

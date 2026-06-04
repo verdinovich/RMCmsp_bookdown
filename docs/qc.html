@@ -29,7 +29,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-06-02" />
+<meta name="date" content="2026-06-04" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -171,10 +171,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="appendix"><span><b>Appendix</b></span></li>
 <li class="chapter" data-level="A" data-path="qc.html"><a href="qc.html"><i class="fa fa-check"></i><b>A</b> Quality Control for Precipitation Annual Maximum Series</a>
 <ul>
-<li class="chapter" data-level="A.1" data-path="qc.html"><a href="qc.html#percent-completion-test"><i class="fa fa-check"></i><b>A.1</b> Percent Completion Test</a></li>
-<li class="chapter" data-level="A.2" data-path="qc.html"><a href="qc.html#ratio-test"><i class="fa fa-check"></i><b>A.2</b> Ratio Test</a></li>
-<li class="chapter" data-level="A.3" data-path="qc.html"><a href="qc.html#outlier-test"><i class="fa fa-check"></i><b>A.3</b> Outlier Test</a></li>
-<li class="chapter" data-level="A.4" data-path="qc.html"><a href="qc.html#extreme-gev-parameters"><i class="fa fa-check"></i><b>A.4</b> Extreme GEV Parameters</a></li>
+<li class="chapter" data-level="A.1" data-path="qc.html"><a href="qc.html#ratio-test"><i class="fa fa-check"></i><b>A.1</b> Ratio Test</a></li>
+<li class="chapter" data-level="A.2" data-path="qc.html"><a href="qc.html#outlier-test"><i class="fa fa-check"></i><b>A.2</b> Outlier Test</a></li>
+<li class="chapter" data-level="A.3" data-path="qc.html"><a href="qc.html#extreme-gev-parameters"><i class="fa fa-check"></i><b>A.3</b> Extreme GEV Parameters</a></li>
 </ul></li>
 <li class="chapter" data-level="B" data-path="example.html"><a href="example.html"><i class="fa fa-check"></i><b>B</b> Example Workflow</a>
 <ul>
@@ -204,22 +203,33 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="qc" class="section level1 hasAnchor" number="4">
 <h1><span class="header-section-number">A</span> Quality Control for Precipitation Annual Maximum Series<a href="qc.html#qc" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <p>This appendix provides a suite of quality control tests to be employed to ensure the precipitation dataset does not contain erroneously large observations. Note that if an observation is flagged it is not always recommended to automatically remove that observation. Rather, a closer inspection is warranted. Are nearby stations reporting a similarly large value? Is there an historic storm that occurred on that date in the region? Build the case for why the observation needs to be thrown out. Don’t build the case on why the observation needs to remain in the database. Innocent until proven guilty!</p>
-<div id="percent-completion-test" class="section level2 hasAnchor" number="4.1">
-<h2><span class="header-section-number">A.1</span> Percent Completion Test<a href="qc.html#percent-completion-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The annual maximum series (AMS) must have a percent completeness of at least 90% for the year for the observation to be accepted. Missing observations exceeding 10% of the year resulted in automatic removal from the dataset.</p>
-<p>Two exceptions may be applied to allow a lower percent completeness threshold for large observations. First, if the observation exceeds the 50th percentile of the site AMS and had at least 50% completeness for the calendar year, the observation may be retained. Second, if the observation exceeds the 95th percentile of the site AMS, regardless of percent completeness, the observation may be retained. The goal behind these thresholds is to accurately capture the maximum rainfall observation for each year as much as possible. The selected thresholds are based on the quality control criteria applied in many of the NOAA Atlas 14 Volumes.</p>
-</div>
-<div id="ratio-test" class="section level2 hasAnchor" number="4.2">
-<h2><span class="header-section-number">A.2</span> Ratio Test<a href="qc.html#ratio-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="ratio-test" class="section level2 hasAnchor" number="4.1">
+<h2><span class="header-section-number">A.1</span> Ratio Test<a href="qc.html#ratio-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>The ratio test is a simple heuristic for identifying observations that may have been recorded erroneously. The ratio of the largest and second-largest observations in the AMS is computed, and any observations exceeding a ratio of 2 are flagged for manual inspection. Flagged observations are then corroborated against event dates and magnitudes at surrounding stations. In data sparse regions a gridded dataset may be suitable for verification.</p>
+<p>The function <code>qc_ratio_test( )</code> provides a simple summary of flagged observations for each station. This function is flexible enough to allow the user to specify how many observations to compare. For example, the first and second observations may not be significantly different from each other, but the second and third observations may be where the anomaly occurs. The function <code>qc_ratio_test( )</code> takes the following input:</p>
+<ol style="list-style-type: decimal">
+<li><code>data</code>: the matrix of annual maxima to be QC’d. Rows are years, columns are stations, station ID should be the column names to enable identification of outliers</li>
+<li><code>n_compare</code>: the number of observations to compare. For example, <code>n_compare = 3</code> computes ratios <code>p1/p2</code> and <code>p2/p3</code></li>
+<li><code>threshold</code>: the ratio value above which a pair is flagged. Defaults to 2</li>
+<li><code>verbose</code>: logical. If TRUE, prints a summary to the console. Defaults to TRUE</li>
+</ol>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="qc.html#cb15-1" tabindex="-1"></a>anmax_ratios <span class="ot">&lt;-</span> <span class="fu">qc_ratio_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">n_compare=</span><span class="dv">3</span>, <span class="at">threshold=</span><span class="dv">2</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
 </div>
-<div id="outlier-test" class="section level2 hasAnchor" number="4.3">
-<h2><span class="header-section-number">A.3</span> Outlier Test<a href="qc.html#outlier-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div id="outlier-test" class="section level2 hasAnchor" number="4.2">
+<h2><span class="header-section-number">A.2</span> Outlier Test<a href="qc.html#outlier-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>The outlier test was implemented as a simplified outlier detection test compared to tests such as the Grubbs-Beck or Multiple Grubbs-Beck tests. Observations falling below 2 standard deviations from the median of the AMS may be removed as a low outlier. Visual inspection of the AMS plotting positions can be further evidence to warrant removal. Observations falling above 2 standard deviations from the median are flagged as high outliers and should be investigated in the same way as observations flagged in the ratio test.</p>
+<p>The function <code>qc_outlier_test( )</code> provides a simple summary of flagged observations, and specifies whether they are low or high outliers, for each station. This function computes the at-site median and standard deviation, and flags observations that fall outside the user-specified number of standard deviations from the median. Another option in the function is the ability to log-transform the data before identifying outliers. The function <code>qc_outlier_test( )</code> takes the following input:</p>
+<ol style="list-style-type: decimal">
+<li><code>data</code>: the matrix of annual maxima to be QC’d. Rows are years, columns are stations, and station ID should be the column names to enable identification of outliers</li>
+<li><code>k</code>: the number of standard deviations from the median used as the outlier threshold. Default is 2</li>
+<li><code>log_transform</code>: logical. If TRUE, the test is performed on log(data) and boundard are back-transformed for reporting. Defaults to TRUE</li>
+<li><code>verbose</code>: logical. If TRUE, prints a summary to the console. Defaults to TRUE</li>
+</ol>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="qc.html#cb16-1" tabindex="-1"></a>anmax_outliers <span class="ot">&lt;-</span> <span class="fu">qc_outlier_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">k=</span><span class="dv">2</span>, <span class="at">log_transform=</span><span class="cn">TRUE</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
 </div>
-<div id="extreme-gev-parameters" class="section level2 hasAnchor" number="4.4">
-<h2><span class="header-section-number">A.4</span> Extreme GEV Parameters<a href="qc.html#extreme-gev-parameters" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>As a qualitative quality control step, the site-specific GEV parameters can be plotted using the <code>plot_at_site_gev( )</code> function to identify sites with anomalous values. Special attention should be given to the shape parameter, as extreme positive or negative values can produce very steep or flat frequency curves that may be the result of one or more outliers. Sites flagged as having extreme GEV parameters should be reviewed for outliers to determine whether the parameters reflect genuine hydrologic behavior or are artifacts of a short and/or sparse period of record.</p>
+<div id="extreme-gev-parameters" class="section level2 hasAnchor" number="4.3">
+<h2><span class="header-section-number">A.3</span> Extreme GEV Parameters<a href="qc.html#extreme-gev-parameters" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>As a qualitative quality control step, the site-specific GEV parameters can be plotted using the <code>plot_at_site_gev( )</code> function to identify sites with anomalous values (See Chapter <a href="workflow.html#mspsetup">3.1</a>). Special attention should be given to the shape parameter, as extreme positive or negative values can produce very steep or flat frequency curves that may be the result of one or more outliers. Sites flagged as having extreme GEV parameters should be reviewed for outliers to determine whether the parameters reflect genuine hydrologic behavior or are artifacts of a short and/or sparse period of record.</p>
 </div>
 </div>
             </section>

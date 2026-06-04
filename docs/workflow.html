@@ -29,7 +29,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-06-02" />
+<meta name="date" content="2026-06-04" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -171,10 +171,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="appendix"><span><b>Appendix</b></span></li>
 <li class="chapter" data-level="A" data-path="qc.html"><a href="qc.html"><i class="fa fa-check"></i><b>A</b> Quality Control for Precipitation Annual Maximum Series</a>
 <ul>
-<li class="chapter" data-level="A.1" data-path="qc.html"><a href="qc.html#percent-completion-test"><i class="fa fa-check"></i><b>A.1</b> Percent Completion Test</a></li>
-<li class="chapter" data-level="A.2" data-path="qc.html"><a href="qc.html#ratio-test"><i class="fa fa-check"></i><b>A.2</b> Ratio Test</a></li>
-<li class="chapter" data-level="A.3" data-path="qc.html"><a href="qc.html#outlier-test"><i class="fa fa-check"></i><b>A.3</b> Outlier Test</a></li>
-<li class="chapter" data-level="A.4" data-path="qc.html"><a href="qc.html#extreme-gev-parameters"><i class="fa fa-check"></i><b>A.4</b> Extreme GEV Parameters</a></li>
+<li class="chapter" data-level="A.1" data-path="qc.html"><a href="qc.html#ratio-test"><i class="fa fa-check"></i><b>A.1</b> Ratio Test</a></li>
+<li class="chapter" data-level="A.2" data-path="qc.html"><a href="qc.html#outlier-test"><i class="fa fa-check"></i><b>A.2</b> Outlier Test</a></li>
+<li class="chapter" data-level="A.3" data-path="qc.html"><a href="qc.html#extreme-gev-parameters"><i class="fa fa-check"></i><b>A.3</b> Extreme GEV Parameters</a></li>
 </ul></li>
 <li class="chapter" data-level="B" data-path="example.html"><a href="example.html"><i class="fa fa-check"></i><b>B</b> Example Workflow</a>
 <ul>
@@ -284,9 +283,9 @@ It’s lazy loaded data, which means it doesn’t show up in your environment un
 <h2><span class="header-section-number">3.3</span> Step 3: <code>msp_uncertainty( )</code><a href="workflow.html#mspuncertainty" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Assuming the general MSP model converged and fitted successfully, you can now take the output from <code>fit_msp( )</code> and put it into the <code>msp_uncertainty( )</code> function.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="workflow.html#cb13-1" tabindex="-1"></a>msp_uncert_mvn   <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span></code></pre></div>
-<p>As mentioned in the introduction, there are technically two methods to choose from when running the <code>msp_uncertainty( )</code> function. Based on testing at two very different watersheds, you should choose <code>method="mvn"</code>. This uses the general MSP model fitted values and variance covariance matrix to produce random samples from a multivariate normal (i.e., mvn) distribution. The other method (<code>method="boot"</code>) will take random samples from the general MSP model and re-fit an MSP model to each. Remember how long it took to fit the general MSP model? Multiply that by 300. It takes forever. Only do it if you like waiting. Here are validation figures from those two watersheds:</p>
+<p>As mentioned in the introduction, there are technically two methods to choose from when running the <code>msp_uncertainty( )</code> function. Based on testing at two very different watersheds, you should choose <code>method="mvn"</code>. This uses the general MSP model fitted values and variance covariance matrix to produce random samples from a multivariate normal (i.e., mvn) distribution. The other method (<code>method="boot"</code>) will take random samples from the general MSP model and re-fit an MSP model to each. Remember how long it took to fit the general MSP model? Multiply that by 300. Or maybe only 50 because it’s parallelized. Either way, it takes forever. Only do it if you like waiting. Here are validation figures from those two watersheds:</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:fitspat0"></span>
-<img src="step4a.png" alt="Output from fit_spatial_GLM function, describing the spatial GEV model. " width="99%" />
+<img src="mc_mvn_vs_boot_nonparametric.png" alt="Output from fit_spatial_GLM function, describing the spatial GEV model. " width="99%" />
 <p class="caption">
 Figure 3.2: Output from fit_spatial_GLM function, describing the spatial GEV model.
 </p>
