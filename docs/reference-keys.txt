@@ -1,5 +1,6 @@
 fig:atsite
-fig:fitspat0
+fig:mccomp
+fig:bufcomp
 intro
 precipdata
 download
@@ -20,6 +21,6 @@ qc
 ratio-test
 outlier-test
 extreme-gev-parameters
-example
+appendixb
 using-the-data-from-rmcmsp
 using-your-own-data-from-section-refprecipdata

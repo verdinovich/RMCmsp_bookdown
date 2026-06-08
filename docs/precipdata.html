@@ -29,7 +29,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-06-04" />
+<meta name="date" content="2026-06-08" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -175,10 +175,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="A.2" data-path="qc.html"><a href="qc.html#outlier-test"><i class="fa fa-check"></i><b>A.2</b> Outlier Test</a></li>
 <li class="chapter" data-level="A.3" data-path="qc.html"><a href="qc.html#extreme-gev-parameters"><i class="fa fa-check"></i><b>A.3</b> Extreme GEV Parameters</a></li>
 </ul></li>
-<li class="chapter" data-level="B" data-path="example.html"><a href="example.html"><i class="fa fa-check"></i><b>B</b> Example Workflow</a>
+<li class="chapter" data-level="B" data-path="appendixb.html"><a href="appendixb.html"><i class="fa fa-check"></i><b>B</b> Example Workflow</a>
 <ul>
-<li class="chapter" data-level="B.1" data-path="example.html"><a href="example.html#using-the-data-from-rmcmsp"><i class="fa fa-check"></i><b>B.1</b> Using the Data from <code>RMCmsp</code></a></li>
-<li class="chapter" data-level="B.2" data-path="example.html"><a href="example.html#using-your-own-data-from-section-refprecipdata"><i class="fa fa-check"></i><b>B.2</b> Using Your Own Data from Section @ref(precipdata)</a></li>
+<li class="chapter" data-level="B.1" data-path="appendixb.html"><a href="appendixb.html#using-the-data-from-rmcmsp"><i class="fa fa-check"></i><b>B.1</b> Using the Data from <code>RMCmsp</code></a></li>
+<li class="chapter" data-level="B.2" data-path="appendixb.html"><a href="appendixb.html#using-your-own-data-from-section-refprecipdata"><i class="fa fa-check"></i><b>B.2</b> Using Your Own Data from Section @ref(precipdata)</a></li>
 </ul></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
@@ -214,7 +214,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ## 6 ACW00011604 17.1167 -61.7833  PGTM    1949  1949</code></pre>
 <div id="download" class="section level2 hasAnchor" number="2.1">
 <h2><span class="header-section-number">2.1</span> Download GHCNd stations<a href="precipdata.html#download" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>Plot the stations in GIS with your basin shapefile and pertinent raster data to assist in the definition of a study region surrounding the basin. Consult a hydrometeorologist (such as John England, Samantha Hartke, or Andrew Verdin) if you need help defining a bounding box. Once you have the bounding box defined, create a subset of the station inventory and download the data for those stations using the following R code (<code>0a_download_ghcnd.R</code>):</p>
+<p>Plot the stations in GIS with your basin shapefile and pertinent raster data to assist in the definition of a study region surrounding the basin. Consult a hydrometeorologist (such as John England, Samantha Hartke, or yours truly) if you need help defining a bounding box. Once you have the bounding box defined, create a subset of the station inventory and download the data for those stations using the following R code (<code>0a_download_ghcnd.R</code>):</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="precipdata.html#cb4-1" tabindex="-1"></a><span class="fu">library</span>(curl)</span>
 <span id="cb4-2"><a href="precipdata.html#cb4-2" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="precipdata.html#cb4-3" tabindex="-1"></a><span class="co"># set your working directory to the folder you want to save all the GHCNd data</span></span>
@@ -334,7 +334,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="precipdata.html#cb8-1" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_url</span>(<span class="st">&quot;https://prism.oregonstate.edu/normals/&quot;</span>)</span></code></pre></div>
 <iframe src="https://prism.oregonstate.edu/normals/" width="672" height="400px" data-external="1">
 </iframe>
-<p>I just went back to the PRISM website while working through this document, and there is no more <code>Download All Normals Data (.bil)</code> option. Also, the solar irradiance variables are unavailable. You can download all the PRISM data you need for this analysis here:</p>
+<p>I just went back to the PRISM website while working through this document, and there is no more <code>Download All Normals Data (.bil)</code> option. To save yourself the hassle of downloading them all individually, you can download all the PRISM data you need for this analysis here:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="precipdata.html#cb9-1" tabindex="-1"></a>\\CPC<span class="sc">-</span>Netapp3.eis.ds.usace.army.mil\RMC\RMC<span class="sc">-</span>HECSA\TRANSFER\RMC\Verdin\RMCmsp_v1<span class="fl">.0</span>_beta\PRISM_MSP</span></code></pre></div>
 <p>Once all data have been downloaded, you can use the following code (<code>0d_crop_prism.R</code>) to crop them to a user-defined bounding box and save them all in an RDS file.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="precipdata.html#cb10-1" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
@@ -395,7 +395,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="setting-up-your-workspace" class="section level2 hasAnchor" number="2.6">
 <h2><span class="header-section-number">2.6</span> Setting Up Your Workspace<a href="precipdata.html#setting-up-your-workspace" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>You now have all the required inputs to get started on your MSP analysis! The next chapter will walk you through the four main functions included in the RMCmsp library. See Appendix <a href="example.html#example">B</a> for an example workflow.</p>
+<p>You now have all the required inputs to get started on your MSP analysis! The next chapter will walk you through the four main functions included in the RMCmsp library. See Appendix <a href="appendixb.html#appendixb">B</a> for an example workflow.</p>
 
 </div>
 </div>

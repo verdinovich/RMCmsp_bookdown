@@ -29,7 +29,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-06-04" />
+<meta name="date" content="2026-06-08" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -175,10 +175,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="A.2" data-path="qc.html"><a href="qc.html#outlier-test"><i class="fa fa-check"></i><b>A.2</b> Outlier Test</a></li>
 <li class="chapter" data-level="A.3" data-path="qc.html"><a href="qc.html#extreme-gev-parameters"><i class="fa fa-check"></i><b>A.3</b> Extreme GEV Parameters</a></li>
 </ul></li>
-<li class="chapter" data-level="B" data-path="example.html"><a href="example.html"><i class="fa fa-check"></i><b>B</b> Example Workflow</a>
+<li class="chapter" data-level="B" data-path="appendixb.html"><a href="appendixb.html"><i class="fa fa-check"></i><b>B</b> Example Workflow</a>
 <ul>
-<li class="chapter" data-level="B.1" data-path="example.html"><a href="example.html#using-the-data-from-rmcmsp"><i class="fa fa-check"></i><b>B.1</b> Using the Data from <code>RMCmsp</code></a></li>
-<li class="chapter" data-level="B.2" data-path="example.html"><a href="example.html#using-your-own-data-from-section-refprecipdata"><i class="fa fa-check"></i><b>B.2</b> Using Your Own Data from Section @ref(precipdata)</a></li>
+<li class="chapter" data-level="B.1" data-path="appendixb.html"><a href="appendixb.html#using-the-data-from-rmcmsp"><i class="fa fa-check"></i><b>B.1</b> Using the Data from <code>RMCmsp</code></a></li>
+<li class="chapter" data-level="B.2" data-path="appendixb.html"><a href="appendixb.html#using-your-own-data-from-section-refprecipdata"><i class="fa fa-check"></i><b>B.2</b> Using Your Own Data from Section @ref(precipdata)</a></li>
 </ul></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
@@ -283,13 +283,20 @@ It’s lazy loaded data, which means it doesn’t show up in your environment un
 <h2><span class="header-section-number">3.3</span> Step 3: <code>msp_uncertainty( )</code><a href="workflow.html#mspuncertainty" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Assuming the general MSP model converged and fitted successfully, you can now take the output from <code>fit_msp( )</code> and put it into the <code>msp_uncertainty( )</code> function.</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="workflow.html#cb13-1" tabindex="-1"></a>msp_uncert_mvn   <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span></code></pre></div>
-<p>As mentioned in the introduction, there are technically two methods to choose from when running the <code>msp_uncertainty( )</code> function. Based on testing at two very different watersheds, you should choose <code>method="mvn"</code>. This uses the general MSP model fitted values and variance covariance matrix to produce random samples from a multivariate normal (i.e., mvn) distribution. The other method (<code>method="boot"</code>) will take random samples from the general MSP model and re-fit an MSP model to each. Remember how long it took to fit the general MSP model? Multiply that by 300. Or maybe only 50 because it’s parallelized. Either way, it takes forever. Only do it if you like waiting. Here are validation figures from those two watersheds:</p>
-<div class="figure" style="text-align: center"><span style="display:block;" id="fig:fitspat0"></span>
-<img src="mc_mvn_vs_boot_nonparametric.png" alt="Output from fit_spatial_GLM function, describing the spatial GEV model. " width="99%" />
+<p>As mentioned in the introduction, there are technically two methods to choose from when running the <code>msp_uncertainty( )</code> function. Based on testing at two very different watersheds, you should choose <code>method="mvn"</code> until you’re sure you’re running your final analysis. The <code>mvn</code> method uses the general MSP model fitted values and variance covariance matrix to produce random samples from a multivariate normal (i.e., mvn) distribution. The other method (<code>method="boot"</code>) will take random samples from the general MSP model and re-fit an MSP model to each. Remember how long it took to fit the general MSP model? Multiply that by 300. Or maybe only 50 because it’s parallelized. Either way, it takes forever. I just ran an analysis and it took 10 hours, compared to 1 second from <code>mvn</code>. Only do it if you like waiting (or it’s your final analysis). Here are validation figures from those two watersheds:</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mccomp"></span>
+<img src="mc_mvn_vs_boot_nonparametric.png" alt="Comparison of multivariate normal and bootstrap simulation methods of uncertainty for a small semi-arid watershed. " width="99%" />
 <p class="caption">
-Figure 3.2: Output from fit_spatial_GLM function, describing the spatial GEV model.
+Figure 3.2: Comparison of multivariate normal and bootstrap simulation methods of uncertainty for a small semi-arid watershed.
 </p>
 </div>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:bufcomp"></span>
+<img src="buford_mvn_vs_boot_nonparametric.png" alt="Same as above but for a moderately sized Appalachian watershed" width="99%" />
+<p class="caption">
+Figure 3.3: Same as above but for a moderately sized Appalachian watershed
+</p>
+</div>
+<p>As can be seen, there is a slight reduction in uncertainty when using <code>method=mvn</code>, which is more pronounced at larger scales and/or complex topography and orographic effects. Therefore, use <code>method=mvn</code> until you’re done testing, running sensitivities, alternate study regions, etc. When you’re finalizing your report, use <code>method=boot</code>.</p>
 <p>The <code>msp_uncertainty( )</code> function returns a list with four items:</p>
 <ol style="list-style-type: decimal">
 <li><code>param_samples</code>: matrix of the general MSP model parameters. The number of rows corresponds to <code>nsims</code> specified in the <code>msp_uncertainty( )</code> function call; the number of columns represents the number of parameters in the general MSP model</li>
@@ -314,16 +321,51 @@ Figure 3.2: Output from fit_spatial_GLM function, describing the spatial GEV mod
 <li><code>target_shapes</code>: GEV shape parameters for each uncertainty sample and each target location (rows are samples, columns are subbasin targets)</li>
 <li><code>general_msp_used</code>: boolean indicating whether the general MSP model was used. This should always be TRUE</li>
 <li><code>msp_uncertainty</code>: the output from the <code>msp_uncertainty( )</code> function that was used as input for <code>simulate_from_msp( )</code></li>
-<li><code>msp_fit</code>: the output from the <code>fit_msp( )</code> function that was used as input for <code>simulate_from_msp( )</code></li>
+<li><code>msp_fit</code>: the fitted general MSP model and accompanying information provided by the <code>fit_msp( )</code> function, used as input for <code>simulate_from_msp( )</code></li>
 </ol>
 </div>
 <div id="bonusfunctions" class="section level2 hasAnchor" number="3.5">
 <h2><span class="header-section-number">3.5</span> Step 5: Bonus Functions<a href="workflow.html#bonusfunctions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <div id="mspsmooth" class="section level3 hasAnchor" number="3.5.1">
 <h3><span class="header-section-number">3.5.1</span> <code>msp_smooth( )</code><a href="workflow.html#mspsmooth" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The output from the <code>simulate_from_msp( )</code> function is a nonparametric precipitation-frequency curve, which can be problematic when using this analysis with a tool such as RRFT. RRFT does accept empirical precipitation-frequency information, but if you want to extrapolate to rarer AEPs then a GEV approximation is preferred. The <code>msp_smooth( )</code> function takes the output from the <code>simulate_from_msp( )</code> function and fits a GEV curve to each of the nonparametric precipitation-frequency curves to approximate the 90% confidence interval. The GEV parameters for the mean precipitation-frequency curve are also computed. Finally, the pseudo-ERL (pERL) is computed so you can put the mean GEV and ERL into RRFT to estimate your precipitation-frequency curve. The <code>msp_smooth( )</code> function takes the following input:</p>
+<ol style="list-style-type: decimal">
+<li><code>msp_sims</code>: output from the <code>simulate_from_msp( )</code> function</li>
+<li><code>probs</code>: quantiles over which to apply the optimization routine. Default is c(0.001, 0.01, seq(0.1, 0.9, 0.1), 0.99, 0.999, 0.9999)</li>
+<li><code>ci</code>: the size of the confidence interval in percent (e.g., 90 equates to the 90% confidence interval). Default is 90</li>
+</ol>
+<p>The <code>msp_smooth( )</code> function returns a list with 6 items:</p>
+<ol style="list-style-type: decimal">
+<li><code>gev.params</code>: a matrix with 5 columns (<code>gev.loc</code>, <code>gev.scale</code>, <code>gev.shape</code>, <code>optim</code>, <code>convergence</code>). First three columns are the GEV parameters, <code>optim</code> is the optimization value, and <code>convergence</code> indicates whether the optimizer converged or not (0 indicates convergence). Number of rows correspond to number of simulations from <code>simulate_from_msp( )</code> plus 1 (the extra row is the initial model fit from <code>fit_msp( )</code>)</li>
+<li><code>gev.quants</code>: a matrix with the quantiles for each simulation. Number of rows corresponds to the <code>probs</code>; number of columns corresponds to the number of simulations plus 1</li>
+<li><code>gev.table</code>: a summary table ready to drop into a report</li>
+<li><code>ci</code>: the confidence interval specified</li>
+<li><code>mean.gev.params</code>: the GEV parameters that best replicate the mean precipitation-frequency curve</li>
+<li><code>gev.erl</code>: the pERL associated with <code>mean.gev.params</code></li>
+</ol>
 </div>
 <div id="msppointprecip" class="section level3 hasAnchor" number="3.5.2">
 <h3><span class="header-section-number">3.5.2</span> <code>msp_point_precip( )</code><a href="workflow.html#msppointprecip" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Maybe you want a quick comparison to the NOAA Atlas 14 grids? The <code>msp_point_precip( )</code> function can do that for you. It can also produce basin-average precipitation-frequency estimates based upon the basin-average GEV parameters. The <code>msp_point_precip( )</code> function takes the following arguments:</p>
+<ol style="list-style-type: decimal">
+<li><code>msp_fit</code>: the fitted general MSP model and accompanying information provided by the <code>fit_msp( )</code> function</li>
+<li><code>shp</code>: optionally, your watershed shapefile used to compute basin-average GEV parameters and point precipitation-frequency</li>
+<li><code>mapping_aep</code>: annual exceedance probability for the gridded point precipitation-frqeuency map</li>
+<li><code>tabular_aeps</code>: optionally, the annual exceedance probabilities for which the basin-average point precipitation-frequency estimates will be reported</li>
+</ol>
+<p>The <code>msp_point_precip( )</code> function returns a list with either 6 or 10 items, depending on whether the watershed shapefile was provided:</p>
+<ol style="list-style-type: decimal">
+<li><code>msp_location</code>: a raster of class <code>SpatRaster</code> with the GEV location parameter at each grid cell</li>
+<li><code>msp_scale</code>: a raster of class <code>SpatRaster</code> with the GEV scale parameter at each grid cell</li>
+<li><code>msp_shape</code>: a raster of class <code>SpatRaster</code> with the GEV shape parameter at each grid cell. Note the shape is constant so this is a single value for all grid cells</li>
+<li><code>mapped_aep</code>: a raster of class <code>SpatRaster</code> with the point precipitation-frequency estimates for the specified <code>aep</code> at each grid cell</li>
+<li><code>aep</code>: the specified aep for the <code>mapped_aep</code> raster</li>
+<li><code>bavg_location</code>: the basin-average GEV location parameter, only returned if <code>shp</code> is provided as input</li>
+<li><code>bavg_scale</code>: the basin-average GEV scale parameter, only returned if <code>shp</code> is provided as input</li>
+<li><code>bavg_shape</code>: the basin-average GEV shape parameter, only returned if <code>shp</code> is provided as input</li>
+<li><code>pf_table</code>: the basin-average point precipitation-frequency estimates for the <code>tabular_aeps</code>, only returned if <code>shp</code> is provided as input</li>
+<li><code>msp_fit</code>: the fitted general MSP model and accompanying information provided by the <code>fit_msp( )</code> function, used as input for <code>msp_point_precip( )</code></li>
+</ol>
 
 </div>
 </div>

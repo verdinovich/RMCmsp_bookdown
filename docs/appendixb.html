@@ -4,13 +4,13 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>A Quality Control for Precipitation Annual Maximum Series | Basin Average Precipitation-Frequency Using Max Stable Processes</title>
+  <title>B Example Workflow | Basin Average Precipitation-Frequency Using Max Stable Processes</title>
   <meta name="description" content="<p>This provides an overview of the data processing and analysis for the R package
 RMCmsp, which provides streamlined wrapper functions for the SpatialExtremes
 R package to perform precipitation-frequency analysis to support RMC IES studies.</p>" />
   <meta name="generator" content="bookdown 0.46 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="A Quality Control for Precipitation Annual Maximum Series | Basin Average Precipitation-Frequency Using Max Stable Processes" />
+  <meta property="og:title" content="B Example Workflow | Basin Average Precipitation-Frequency Using Max Stable Processes" />
   <meta property="og:type" content="book" />
   
   <meta property="og:description" content="<p>This provides an overview of the data processing and analysis for the R package
@@ -19,7 +19,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
   <meta name="github-repo" content="rstudio/bookdown-demo" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="A Quality Control for Precipitation Annual Maximum Series | Basin Average Precipitation-Frequency Using Max Stable Processes" />
+  <meta name="twitter:title" content="B Example Workflow | Basin Average Precipitation-Frequency Using Max Stable Processes" />
   
   <meta name="twitter:description" content="<p>This provides an overview of the data processing and analysis for the R package
 RMCmsp, which provides streamlined wrapper functions for the SpatialExtremes
@@ -36,8 +36,8 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="workflow.html"/>
-<link rel="next" href="appendixb.html"/>
+<link rel="prev" href="qc.html"/>
+
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -200,36 +200,67 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="qc" class="section level1 hasAnchor" number="4">
-<h1><span class="header-section-number">A</span> Quality Control for Precipitation Annual Maximum Series<a href="qc.html#qc" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<p>This appendix provides a suite of quality control tests to be employed to ensure the precipitation dataset does not contain erroneously large observations. Note that if an observation is flagged it is not always recommended to automatically remove that observation. Rather, a closer inspection is warranted. Are nearby stations reporting a similarly large value? Is there an historic storm that occurred on that date in the region? Build the case for why the observation needs to be thrown out. Don’t build the case on why the observation needs to remain in the database. Innocent until proven guilty!</p>
-<div id="ratio-test" class="section level2 hasAnchor" number="4.1">
-<h2><span class="header-section-number">A.1</span> Ratio Test<a href="qc.html#ratio-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The ratio test is a simple heuristic for identifying observations that may have been recorded erroneously. The ratio of the largest and second-largest observations in the AMS is computed, and any observations exceeding a ratio of 2 are flagged for manual inspection. Flagged observations are then corroborated against event dates and magnitudes at surrounding stations. In data sparse regions a gridded dataset may be suitable for verification.</p>
-<p>The function <code>qc_ratio_test( )</code> provides a simple summary of flagged observations for each station. This function is flexible enough to allow the user to specify how many observations to compare. For example, the first and second observations may not be significantly different from each other, but the second and third observations may be where the anomaly occurs. The function <code>qc_ratio_test( )</code> takes the following input:</p>
-<ol style="list-style-type: decimal">
-<li><code>data</code>: the matrix of annual maxima to be QC’d. Rows are years, columns are stations, station ID should be the column names to enable identification of outliers</li>
-<li><code>n_compare</code>: the number of observations to compare. For example, <code>n_compare = 3</code> computes ratios <code>p1/p2</code> and <code>p2/p3</code></li>
-<li><code>threshold</code>: the ratio value above which a pair is flagged. Defaults to 2</li>
-<li><code>verbose</code>: logical. If TRUE, prints a summary to the console. Defaults to TRUE</li>
-</ol>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="qc.html#cb15-1" tabindex="-1"></a>anmax_ratios <span class="ot">&lt;-</span> <span class="fu">qc_ratio_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">n_compare=</span><span class="dv">3</span>, <span class="at">threshold=</span><span class="dv">2</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<div id="appendixb" class="section level1 hasAnchor" number="5">
+<h1><span class="header-section-number">B</span> Example Workflow<a href="appendixb.html#appendixb" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="using-the-data-from-rmcmsp" class="section level2 hasAnchor" number="5.1">
+<h2><span class="header-section-number">B.1</span> Using the Data from <code>RMCmsp</code><a href="appendixb.html#using-the-data-from-rmcmsp" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>This appendix presents an example workflow using the data that comes baked into the R package. To begin, double click the RStudio Project File in the RMCmsp folder: <code>RMCmsp.Rproj</code>. This opens up an instance of RStudio. You should see “RMCmsp - RStudio” in the top left banner of RStudio. You will need to have <code>devtools</code> installed. From RStudio, type <code>install.packages("devtools")</code> into the Console. Once that is successfully installed, you should be able to run the following workflow:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="appendixb.html#cb17-1" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
+<span id="cb17-2"><a href="appendixb.html#cb17-2" tabindex="-1"></a><span class="fu">load_all</span>()</span>
+<span id="cb17-3"><a href="appendixb.html#cb17-3" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="appendixb.html#cb17-4" tabindex="-1"></a><span class="co"># Step 1</span></span>
+<span id="cb17-5"><a href="appendixb.html#cb17-5" tabindex="-1"></a>msp_workspace   <span class="ot">&lt;-</span> <span class="fu">msp_setup</span>(<span class="at">anmax=</span>mc_anmax, <span class="at">metadata=</span>mc_meta, <span class="at">prism_rasters=</span>mc_prism, <span class="at">subbasin_targets=</span>mc_targets)</span>
+<span id="cb17-6"><a href="appendixb.html#cb17-6" tabindex="-1"></a><span class="fu">plot_at_site_gev</span>(<span class="at">at_site_gev =</span> msp_workspace<span class="sc">$</span>gev.fits, <span class="at">shp=</span>mc_shapefile)</span>
+<span id="cb17-7"><a href="appendixb.html#cb17-7" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="appendixb.html#cb17-8" tabindex="-1"></a><span class="co"># Step 2</span></span>
+<span id="cb17-9"><a href="appendixb.html#cb17-9" tabindex="-1"></a>msp_fit         <span class="ot">&lt;-</span> <span class="fu">fit_msp</span>(<span class="at">msp_workspace=</span>msp_workspace, <span class="at">covar.mod=</span><span class="st">&#39;twhitmat&#39;</span>)</span>
+<span id="cb17-10"><a href="appendixb.html#cb17-10" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="appendixb.html#cb17-11" tabindex="-1"></a><span class="co"># Step 3</span></span>
+<span id="cb17-12"><a href="appendixb.html#cb17-12" tabindex="-1"></a>msp_uncert_mvn  <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span>
+<span id="cb17-13"><a href="appendixb.html#cb17-13" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="appendixb.html#cb17-14" tabindex="-1"></a><span class="co"># Step 4</span></span>
+<span id="cb17-15"><a href="appendixb.html#cb17-15" tabindex="-1"></a>msp_sims_mvn    <span class="ot">&lt;-</span> <span class="fu">simulate_from_msp</span>(<span class="at">msp_uncertainty=</span>msp_uncert_mvn, <span class="at">msp_fit=</span>msp_fit, <span class="at">nsims=</span><span class="dv">10000</span>, <span class="at">subbasin_targets=</span>mc_targets, <span class="at">target_weights=</span>mc_weights)</span>
+<span id="cb17-16"><a href="appendixb.html#cb17-16" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="appendixb.html#cb17-17" tabindex="-1"></a><span class="co"># Bonus Functions</span></span>
+<span id="cb17-18"><a href="appendixb.html#cb17-18" tabindex="-1"></a>msp_smoothed    <span class="ot">&lt;-</span> <span class="fu">msp_smooth</span>(<span class="at">msp_sims=</span>msp_sims_mvn)</span>
+<span id="cb17-19"><a href="appendixb.html#cb17-19" tabindex="-1"></a>msp_pt_precip   <span class="ot">&lt;-</span> <span class="fu">msp_point_precip</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">shp=</span>mc_shapefile, <span class="at">mapping_aep=</span><span class="fl">0.01</span>, <span class="at">tabular_aeps=</span><span class="cn">NULL</span>)</span></code></pre></div>
+<p>Easy right? :)</p>
 </div>
-<div id="outlier-test" class="section level2 hasAnchor" number="4.2">
-<h2><span class="header-section-number">A.2</span> Outlier Test<a href="qc.html#outlier-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The outlier test was implemented as a simplified outlier detection test compared to tests such as the Grubbs-Beck or Multiple Grubbs-Beck tests. Observations falling below 2 standard deviations from the median of the AMS may be removed as a low outlier. Visual inspection of the AMS plotting positions can be further evidence to warrant removal. Observations falling above 2 standard deviations from the median are flagged as high outliers and should be investigated in the same way as observations flagged in the ratio test.</p>
-<p>The function <code>qc_outlier_test( )</code> provides a simple summary of flagged observations, and specifies whether they are low or high outliers, for each station. This function computes the at-site median and standard deviation, and flags observations that fall outside the user-specified number of standard deviations from the median. Another option in the function is the ability to log-transform the data before identifying outliers. The function <code>qc_outlier_test( )</code> takes the following input:</p>
-<ol style="list-style-type: decimal">
-<li><code>data</code>: the matrix of annual maxima to be QC’d. Rows are years, columns are stations, and station ID should be the column names to enable identification of outliers</li>
-<li><code>k</code>: the number of standard deviations from the median used as the outlier threshold. Default is 2</li>
-<li><code>log_transform</code>: logical. If TRUE, the test is performed on log(data) and boundard are back-transformed for reporting. Defaults to TRUE</li>
-<li><code>verbose</code>: logical. If TRUE, prints a summary to the console. Defaults to TRUE</li>
-</ol>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="qc.html#cb16-1" tabindex="-1"></a>anmax_outliers <span class="ot">&lt;-</span> <span class="fu">qc_outlier_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">k=</span><span class="dv">2</span>, <span class="at">log_transform=</span><span class="cn">TRUE</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
-</div>
-<div id="extreme-gev-parameters" class="section level2 hasAnchor" number="4.3">
-<h2><span class="header-section-number">A.3</span> Extreme GEV Parameters<a href="qc.html#extreme-gev-parameters" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>As a qualitative quality control step, the site-specific GEV parameters can be plotted using the <code>plot_at_site_gev( )</code> function to identify sites with anomalous values (See Chapter <a href="workflow.html#mspsetup">3.1</a>). Special attention should be given to the shape parameter, as extreme positive or negative values can produce very steep or flat frequency curves that may be the result of one or more outliers. Sites flagged as having extreme GEV parameters should be reviewed for outliers to determine whether the parameters reflect genuine hydrologic behavior or are artifacts of a short and/or sparse period of record.</p>
+<div id="using-your-own-data-from-section-refprecipdata" class="section level2 hasAnchor" number="5.2">
+<h2><span class="header-section-number">B.2</span> Using Your Own Data from Section <a href="precipdata.html#precipdata">2</a><a href="appendixb.html#using-your-own-data-from-section-refprecipdata" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>This appendix presents an example workflow using the data you put together in Section <a href="precipdata.html#precipdata">2</a>. To begin, double click the RStudio Project File in the RMCmsp folder: <code>RMCmsp.Rproj</code>. This opens up an instance of RStudio. You should see “RMCmsp - RStudio” in the top left banner of RStudio. You will need to have <code>devtools</code> installed. From RStudio, type <code>install.packages("devtools")</code> into the Console. Once that is successfully installed, you should be able to run the following workflow:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="appendixb.html#cb18-1" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
+<span id="cb18-2"><a href="appendixb.html#cb18-2" tabindex="-1"></a><span class="fu">load_all</span>()</span>
+<span id="cb18-3"><a href="appendixb.html#cb18-3" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="appendixb.html#cb18-4" tabindex="-1"></a><span class="co"># Load the data</span></span>
+<span id="cb18-5"><a href="appendixb.html#cb18-5" tabindex="-1"></a>anmax    <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day.csv&quot;</span>))</span>
+<span id="cb18-6"><a href="appendixb.html#cb18-6" tabindex="-1"></a>metad    <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day-metadata.csv&quot;</span>))</span>
+<span id="cb18-7"><a href="appendixb.html#cb18-7" tabindex="-1"></a>prism    <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(idir,  <span class="st">&quot;prism_crop.rds&quot;</span>))</span>
+<span id="cb18-8"><a href="appendixb.html#cb18-8" tabindex="-1"></a>targets0 <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;target_locations.csv&quot;</span>))</span>
+<span id="cb18-9"><a href="appendixb.html#cb18-9" tabindex="-1"></a>weights  <span class="ot">&lt;-</span> targets0<span class="sc">$</span>area</span>
+<span id="cb18-10"><a href="appendixb.html#cb18-10" tabindex="-1"></a>targets  <span class="ot">&lt;-</span> <span class="fu">subset</span>(targets0, <span class="at">select=</span><span class="fu">c</span>(<span class="st">&quot;lon&quot;</span>,<span class="st">&quot;lat&quot;</span>))</span>
+<span id="cb18-11"><a href="appendixb.html#cb18-11" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="appendixb.html#cb18-12" tabindex="-1"></a><span class="co"># shapefile is optional</span></span>
+<span id="cb18-13"><a href="appendixb.html#cb18-13" tabindex="-1"></a>shp      <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">vect</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;basin.shp&quot;</span>))</span>
+<span id="cb18-14"><a href="appendixb.html#cb18-14" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="appendixb.html#cb18-15" tabindex="-1"></a><span class="co"># Step 1</span></span>
+<span id="cb18-16"><a href="appendixb.html#cb18-16" tabindex="-1"></a>msp_workspace   <span class="ot">&lt;-</span> <span class="fu">msp_setup</span>(<span class="at">anmax=</span>anmax, <span class="at">metadata=</span>metad, <span class="at">prism_rasters=</span>prism, <span class="at">subbasin_targets=</span>targets)</span>
+<span id="cb18-17"><a href="appendixb.html#cb18-17" tabindex="-1"></a><span class="fu">plot_at_site_gev</span>(<span class="at">at_site_gev =</span> msp_workspace<span class="sc">$</span>gev.fits, <span class="at">shp=</span>shp) <span class="co"># if you don&#39;t have shp, just remove that argument</span></span>
+<span id="cb18-18"><a href="appendixb.html#cb18-18" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="appendixb.html#cb18-19" tabindex="-1"></a><span class="co"># Step 2</span></span>
+<span id="cb18-20"><a href="appendixb.html#cb18-20" tabindex="-1"></a>msp_fit         <span class="ot">&lt;-</span> <span class="fu">fit_msp</span>(<span class="at">msp_workspace=</span>msp_workspace, <span class="at">covar.mod=</span><span class="st">&#39;twhitmat&#39;</span>)</span>
+<span id="cb18-21"><a href="appendixb.html#cb18-21" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="appendixb.html#cb18-22" tabindex="-1"></a><span class="co"># Step 3</span></span>
+<span id="cb18-23"><a href="appendixb.html#cb18-23" tabindex="-1"></a>msp_uncert_mvn  <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span>
+<span id="cb18-24"><a href="appendixb.html#cb18-24" tabindex="-1"></a></span>
+<span id="cb18-25"><a href="appendixb.html#cb18-25" tabindex="-1"></a><span class="co"># Step 4</span></span>
+<span id="cb18-26"><a href="appendixb.html#cb18-26" tabindex="-1"></a>msp_sims_mvn    <span class="ot">&lt;-</span> <span class="fu">simulate_from_msp</span>(<span class="at">msp_uncertainty=</span>msp_uncert_mvn, <span class="at">msp_fit=</span>msp_fit, <span class="at">nsims=</span><span class="dv">10000</span>, <span class="at">subbasin_targets=</span>targets, <span class="at">target_weights=</span>weights)</span>
+<span id="cb18-27"><a href="appendixb.html#cb18-27" tabindex="-1"></a></span>
+<span id="cb18-28"><a href="appendixb.html#cb18-28" tabindex="-1"></a><span class="co"># Bonus Functions</span></span>
+<span id="cb18-29"><a href="appendixb.html#cb18-29" tabindex="-1"></a>msp_smoothed    <span class="ot">&lt;-</span> <span class="fu">msp_smooth</span>(<span class="at">msp_sims=</span>msp_sims_mvn)</span>
+<span id="cb18-30"><a href="appendixb.html#cb18-30" tabindex="-1"></a>msp_pt_precip   <span class="ot">&lt;-</span> <span class="fu">msp_point_precip</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">shp=</span>shp, <span class="at">mapping_aep=</span><span class="fl">0.01</span>, <span class="at">tabular_aeps=</span><span class="cn">NULL</span>)</span></code></pre></div>
+<p>Easy right? :)</p>
+
 </div>
 </div>
             </section>
@@ -237,8 +268,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           </div>
         </div>
       </div>
-<a href="workflow.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="appendixb.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="qc.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
