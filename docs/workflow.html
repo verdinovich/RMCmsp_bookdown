@@ -29,7 +29,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-06-08" />
+<meta name="date" content="2026-06-09" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -165,7 +165,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3.5" data-path="workflow.html"><a href="workflow.html#bonusfunctions"><i class="fa fa-check"></i><b>3.5</b> Step 5: Bonus Functions</a>
 <ul>
 <li class="chapter" data-level="3.5.1" data-path="workflow.html"><a href="workflow.html#mspsmooth"><i class="fa fa-check"></i><b>3.5.1</b> <code>msp_smooth( )</code></a></li>
-<li class="chapter" data-level="3.5.2" data-path="workflow.html"><a href="workflow.html#msppointprecip"><i class="fa fa-check"></i><b>3.5.2</b> <code>msp_point_precip( )</code></a></li>
+<li class="chapter" data-level="3.5.2" data-path="workflow.html"><a href="workflow.html#plotmsp"><i class="fa fa-check"></i><b>3.5.2</b> <code>plot_msp( )</code></a></li>
+<li class="chapter" data-level="3.5.3" data-path="workflow.html"><a href="workflow.html#msppointprecip"><i class="fa fa-check"></i><b>3.5.3</b> <code>msp_point_precip( )</code></a></li>
 </ul></li>
 </ul></li>
 <li class="appendix"><span><b>Appendix</b></span></li>
@@ -334,6 +335,7 @@ Figure 3.3: Same as above but for a moderately sized Appalachian watershed
 <li><code>probs</code>: quantiles over which to apply the optimization routine. Default is c(0.001, 0.01, seq(0.1, 0.9, 0.1), 0.99, 0.999, 0.9999)</li>
 <li><code>ci</code>: the size of the confidence interval in percent (e.g., 90 equates to the 90% confidence interval). Default is 90</li>
 </ol>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="workflow.html#cb15-1" tabindex="-1"></a>msp_smooth_mvn  <span class="ot">&lt;-</span> <span class="fu">msp_smooth</span>(<span class="at">msp_sims=</span>msp_sims_mvn)</span></code></pre></div>
 <p>The <code>msp_smooth( )</code> function returns a list with 6 items:</p>
 <ol style="list-style-type: decimal">
 <li><code>gev.params</code>: a matrix with 5 columns (<code>gev.loc</code>, <code>gev.scale</code>, <code>gev.shape</code>, <code>optim</code>, <code>convergence</code>). First three columns are the GEV parameters, <code>optim</code> is the optimization value, and <code>convergence</code> indicates whether the optimizer converged or not (0 indicates convergence). Number of rows correspond to number of simulations from <code>simulate_from_msp( )</code> plus 1 (the extra row is the initial model fit from <code>fit_msp( )</code>)</li>
@@ -344,8 +346,48 @@ Figure 3.3: Same as above but for a moderately sized Appalachian watershed
 <li><code>gev.erl</code>: the pERL associated with <code>mean.gev.params</code></li>
 </ol>
 </div>
-<div id="msppointprecip" class="section level3 hasAnchor" number="3.5.2">
-<h3><span class="header-section-number">3.5.2</span> <code>msp_point_precip( )</code><a href="workflow.html#msppointprecip" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="plotmsp" class="section level3 hasAnchor" number="3.5.2">
+<h3><span class="header-section-number">3.5.2</span> <code>plot_msp( )</code><a href="workflow.html#plotmsp" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The current implementation of the <code>plot_msp( )</code> function can produce three precipitation-frequency plots:</p>
+<ol style="list-style-type: decimal">
+<li>a comparison of the nonparametric (i.e., output from <code>simulate_from_msp( )</code>) and GEV approximated (i.e., output from <code>msp_smooth( )</code>) precipitation-frequency curves</li>
+<li>the nonparametric precipitation-frequency curve</li>
+<li>the GEV approimated precipitation-frequency curve</li>
+</ol>
+<p>The function takes the following input:</p>
+<ol style="list-style-type: decimal">
+<li><code>msp_smooth</code>: output from the <code>msp_smooth( )</code> function. Default is NULL</li>
+<li><code>msp_sims</code>: output from the <code>simulate_from_msp( )</code> function. Default is NULL</li>
+<li><code>max_aep</code>: the maximum annual exceedance probability for the x-axis. Default is 0.99</li>
+<li><code>min_aep</code>: the minimum annual exceedance probability for the x-axis. Default is 1E-4</li>
+<li><code>precip_units</code>: units for precipitation depth, for the y-axis label. Default is “in”</li>
+<li><code>fname</code>: the filename to save the image to your computer. Internally using the <code>png( )</code> function so put <code>.png</code> at the end!</li>
+</ol>
+<p>If you just want the plot the render in your R session, do not specify <code>fname</code>. The function defaults are pretty basic and shouldn’t need modification. There are three options for using this function, as specified here:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="workflow.html#cb16-1" tabindex="-1"></a><span class="fu">plot_msp</span>(<span class="at">msp_smooth=</span>msp_smooth_mvn) <span class="co"># just plots the GEV approximated curves</span></span>
+<span id="cb16-2"><a href="workflow.html#cb16-2" tabindex="-1"></a><span class="fu">plot_msp</span>(<span class="at">msp_sims=</span>msp_sims_mvn) <span class="co"># just plots the nonparametric curves</span></span>
+<span id="cb16-3"><a href="workflow.html#cb16-3" tabindex="-1"></a><span class="fu">plot_msp</span>(<span class="at">msp_smooth=</span>msp_smooth_mvn, <span class="at">msp_sims=</span>msp_sims_mvn) <span class="co"># plots a comparison of nonparametric and GEV approximated curves</span></span></code></pre></div>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:smooth"></span>
+<img src="msp_smooth_test.png" alt="Basin-average precipitation-frequency analysis using GEV approximation of nonparametric samples." width="99%" />
+<p class="caption">
+Figure 3.4: Basin-average precipitation-frequency analysis using GEV approximation of nonparametric samples.
+</p>
+</div>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:sims"></span>
+<img src="msp_sims_test.png" alt="Basin-average precipitation-frequency analysis using nonparametric samples." width="99%" />
+<p class="caption">
+Figure 3.5: Basin-average precipitation-frequency analysis using nonparametric samples.
+</p>
+</div>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:smoothvssims"></span>
+<img src="msp_comparison_test.png" alt="Comparison of GEV approximation and nonparametric curves." width="99%" />
+<p class="caption">
+Figure 3.6: Comparison of GEV approximation and nonparametric curves.
+</p>
+</div>
+</div>
+<div id="msppointprecip" class="section level3 hasAnchor" number="3.5.3">
+<h3><span class="header-section-number">3.5.3</span> <code>msp_point_precip( )</code><a href="workflow.html#msppointprecip" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Maybe you want a quick comparison to the NOAA Atlas 14 grids? The <code>msp_point_precip( )</code> function can do that for you. It can also produce basin-average precipitation-frequency estimates based upon the basin-average GEV parameters. The <code>msp_point_precip( )</code> function takes the following arguments:</p>
 <ol style="list-style-type: decimal">
 <li><code>msp_fit</code>: the fitted general MSP model and accompanying information provided by the <code>fit_msp( )</code> function</li>
@@ -353,12 +395,13 @@ Figure 3.3: Same as above but for a moderately sized Appalachian watershed
 <li><code>mapping_aep</code>: annual exceedance probability for the gridded point precipitation-frqeuency map</li>
 <li><code>tabular_aeps</code>: optionally, the annual exceedance probabilities for which the basin-average point precipitation-frequency estimates will be reported</li>
 </ol>
-<p>The <code>msp_point_precip( )</code> function returns a list with either 6 or 10 items, depending on whether the watershed shapefile was provided:</p>
+<p>The <code>msp_point_precip( )</code> function returns a list with either 6 or 11 items, depending on whether the watershed shapefile was provided:</p>
 <ol style="list-style-type: decimal">
 <li><code>msp_location</code>: a raster of class <code>SpatRaster</code> with the GEV location parameter at each grid cell</li>
 <li><code>msp_scale</code>: a raster of class <code>SpatRaster</code> with the GEV scale parameter at each grid cell</li>
 <li><code>msp_shape</code>: a raster of class <code>SpatRaster</code> with the GEV shape parameter at each grid cell. Note the shape is constant so this is a single value for all grid cells</li>
 <li><code>mapped_aep</code>: a raster of class <code>SpatRaster</code> with the point precipitation-frequency estimates for the specified <code>aep</code> at each grid cell</li>
+<li><code>shp</code>: the shapefile used to calculate the <code>bavg_location</code>, <code>bavg_scale</code>, <code>bavg_shape</code>, and <code>pf_table</code>, in the same projection as <code>mapped_aep</code></li>
 <li><code>aep</code>: the specified aep for the <code>mapped_aep</code> raster</li>
 <li><code>bavg_location</code>: the basin-average GEV location parameter, only returned if <code>shp</code> is provided as input</li>
 <li><code>bavg_scale</code>: the basin-average GEV scale parameter, only returned if <code>shp</code> is provided as input</li>
@@ -366,6 +409,16 @@ Figure 3.3: Same as above but for a moderately sized Appalachian watershed
 <li><code>pf_table</code>: the basin-average point precipitation-frequency estimates for the <code>tabular_aeps</code>, only returned if <code>shp</code> is provided as input</li>
 <li><code>msp_fit</code>: the fitted general MSP model and accompanying information provided by the <code>fit_msp( )</code> function, used as input for <code>msp_point_precip( )</code></li>
 </ol>
+<p>I will be working to develop a streamlined plotting function for this function. In the meantime, to visualize the mapped precipitation-frequency estimates you can use the following R code:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="workflow.html#cb17-1" tabindex="-1"></a>msp_pt_precip <span class="ot">&lt;-</span> <span class="fu">msp_point_precip</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">shp=</span>mc_shapefile, <span class="at">mapping_aep=</span><span class="fl">0.01</span>, <span class="at">tabular_aeps=</span><span class="cn">NULL</span>)</span>
+<span id="cb17-2"><a href="workflow.html#cb17-2" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(msp_pt_precip<span class="sc">$</span>mapped_aep, <span class="at">main=</span><span class="fu">paste</span>(<span class="st">&quot;AEP:&quot;</span>,msp_pt_precip<span class="sc">$</span>aep))</span>
+<span id="cb17-3"><a href="workflow.html#cb17-3" tabindex="-1"></a>terra<span class="sc">::</span><span class="fu">plot</span>(msp_pt_precip<span class="sc">$</span>shp, <span class="at">add=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:mappedaep"></span>
+<img src="mapped_aep.png" alt="Point precipitation-frequency estimates for the study region. Shapefile shown as outline for reference. Units are millimeters." width="99%" />
+<p class="caption">
+Figure 3.7: Point precipitation-frequency estimates for the study region. Shapefile shown as outline for reference. Units are millimeters.
+</p>
+</div>
 
 </div>
 </div>

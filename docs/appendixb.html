@@ -29,7 +29,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-06-08" />
+<meta name="date" content="2026-06-09" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -165,7 +165,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3.5" data-path="workflow.html"><a href="workflow.html#bonusfunctions"><i class="fa fa-check"></i><b>3.5</b> Step 5: Bonus Functions</a>
 <ul>
 <li class="chapter" data-level="3.5.1" data-path="workflow.html"><a href="workflow.html#mspsmooth"><i class="fa fa-check"></i><b>3.5.1</b> <code>msp_smooth( )</code></a></li>
-<li class="chapter" data-level="3.5.2" data-path="workflow.html"><a href="workflow.html#msppointprecip"><i class="fa fa-check"></i><b>3.5.2</b> <code>msp_point_precip( )</code></a></li>
+<li class="chapter" data-level="3.5.2" data-path="workflow.html"><a href="workflow.html#plotmsp"><i class="fa fa-check"></i><b>3.5.2</b> <code>plot_msp( )</code></a></li>
+<li class="chapter" data-level="3.5.3" data-path="workflow.html"><a href="workflow.html#msppointprecip"><i class="fa fa-check"></i><b>3.5.3</b> <code>msp_point_precip( )</code></a></li>
 </ul></li>
 </ul></li>
 <li class="appendix"><span><b>Appendix</b></span></li>
@@ -205,60 +206,60 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="using-the-data-from-rmcmsp" class="section level2 hasAnchor" number="5.1">
 <h2><span class="header-section-number">B.1</span> Using the Data from <code>RMCmsp</code><a href="appendixb.html#using-the-data-from-rmcmsp" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>This appendix presents an example workflow using the data that comes baked into the R package. To begin, double click the RStudio Project File in the RMCmsp folder: <code>RMCmsp.Rproj</code>. This opens up an instance of RStudio. You should see “RMCmsp - RStudio” in the top left banner of RStudio. You will need to have <code>devtools</code> installed. From RStudio, type <code>install.packages("devtools")</code> into the Console. Once that is successfully installed, you should be able to run the following workflow:</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="appendixb.html#cb17-1" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
-<span id="cb17-2"><a href="appendixb.html#cb17-2" tabindex="-1"></a><span class="fu">load_all</span>()</span>
-<span id="cb17-3"><a href="appendixb.html#cb17-3" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="appendixb.html#cb17-4" tabindex="-1"></a><span class="co"># Step 1</span></span>
-<span id="cb17-5"><a href="appendixb.html#cb17-5" tabindex="-1"></a>msp_workspace   <span class="ot">&lt;-</span> <span class="fu">msp_setup</span>(<span class="at">anmax=</span>mc_anmax, <span class="at">metadata=</span>mc_meta, <span class="at">prism_rasters=</span>mc_prism, <span class="at">subbasin_targets=</span>mc_targets)</span>
-<span id="cb17-6"><a href="appendixb.html#cb17-6" tabindex="-1"></a><span class="fu">plot_at_site_gev</span>(<span class="at">at_site_gev =</span> msp_workspace<span class="sc">$</span>gev.fits, <span class="at">shp=</span>mc_shapefile)</span>
-<span id="cb17-7"><a href="appendixb.html#cb17-7" tabindex="-1"></a></span>
-<span id="cb17-8"><a href="appendixb.html#cb17-8" tabindex="-1"></a><span class="co"># Step 2</span></span>
-<span id="cb17-9"><a href="appendixb.html#cb17-9" tabindex="-1"></a>msp_fit         <span class="ot">&lt;-</span> <span class="fu">fit_msp</span>(<span class="at">msp_workspace=</span>msp_workspace, <span class="at">covar.mod=</span><span class="st">&#39;twhitmat&#39;</span>)</span>
-<span id="cb17-10"><a href="appendixb.html#cb17-10" tabindex="-1"></a></span>
-<span id="cb17-11"><a href="appendixb.html#cb17-11" tabindex="-1"></a><span class="co"># Step 3</span></span>
-<span id="cb17-12"><a href="appendixb.html#cb17-12" tabindex="-1"></a>msp_uncert_mvn  <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span>
-<span id="cb17-13"><a href="appendixb.html#cb17-13" tabindex="-1"></a></span>
-<span id="cb17-14"><a href="appendixb.html#cb17-14" tabindex="-1"></a><span class="co"># Step 4</span></span>
-<span id="cb17-15"><a href="appendixb.html#cb17-15" tabindex="-1"></a>msp_sims_mvn    <span class="ot">&lt;-</span> <span class="fu">simulate_from_msp</span>(<span class="at">msp_uncertainty=</span>msp_uncert_mvn, <span class="at">msp_fit=</span>msp_fit, <span class="at">nsims=</span><span class="dv">10000</span>, <span class="at">subbasin_targets=</span>mc_targets, <span class="at">target_weights=</span>mc_weights)</span>
-<span id="cb17-16"><a href="appendixb.html#cb17-16" tabindex="-1"></a></span>
-<span id="cb17-17"><a href="appendixb.html#cb17-17" tabindex="-1"></a><span class="co"># Bonus Functions</span></span>
-<span id="cb17-18"><a href="appendixb.html#cb17-18" tabindex="-1"></a>msp_smoothed    <span class="ot">&lt;-</span> <span class="fu">msp_smooth</span>(<span class="at">msp_sims=</span>msp_sims_mvn)</span>
-<span id="cb17-19"><a href="appendixb.html#cb17-19" tabindex="-1"></a>msp_pt_precip   <span class="ot">&lt;-</span> <span class="fu">msp_point_precip</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">shp=</span>mc_shapefile, <span class="at">mapping_aep=</span><span class="fl">0.01</span>, <span class="at">tabular_aeps=</span><span class="cn">NULL</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="appendixb.html#cb20-1" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
+<span id="cb20-2"><a href="appendixb.html#cb20-2" tabindex="-1"></a><span class="fu">load_all</span>()</span>
+<span id="cb20-3"><a href="appendixb.html#cb20-3" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="appendixb.html#cb20-4" tabindex="-1"></a><span class="co"># Step 1</span></span>
+<span id="cb20-5"><a href="appendixb.html#cb20-5" tabindex="-1"></a>msp_workspace   <span class="ot">&lt;-</span> <span class="fu">msp_setup</span>(<span class="at">anmax=</span>mc_anmax, <span class="at">metadata=</span>mc_meta, <span class="at">prism_rasters=</span>mc_prism, <span class="at">subbasin_targets=</span>mc_targets)</span>
+<span id="cb20-6"><a href="appendixb.html#cb20-6" tabindex="-1"></a><span class="fu">plot_at_site_gev</span>(<span class="at">at_site_gev =</span> msp_workspace<span class="sc">$</span>gev.fits, <span class="at">shp=</span>mc_shapefile)</span>
+<span id="cb20-7"><a href="appendixb.html#cb20-7" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="appendixb.html#cb20-8" tabindex="-1"></a><span class="co"># Step 2</span></span>
+<span id="cb20-9"><a href="appendixb.html#cb20-9" tabindex="-1"></a>msp_fit         <span class="ot">&lt;-</span> <span class="fu">fit_msp</span>(<span class="at">msp_workspace=</span>msp_workspace, <span class="at">covar.mod=</span><span class="st">&#39;twhitmat&#39;</span>)</span>
+<span id="cb20-10"><a href="appendixb.html#cb20-10" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="appendixb.html#cb20-11" tabindex="-1"></a><span class="co"># Step 3</span></span>
+<span id="cb20-12"><a href="appendixb.html#cb20-12" tabindex="-1"></a>msp_uncert_mvn  <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span>
+<span id="cb20-13"><a href="appendixb.html#cb20-13" tabindex="-1"></a></span>
+<span id="cb20-14"><a href="appendixb.html#cb20-14" tabindex="-1"></a><span class="co"># Step 4</span></span>
+<span id="cb20-15"><a href="appendixb.html#cb20-15" tabindex="-1"></a>msp_sims_mvn    <span class="ot">&lt;-</span> <span class="fu">simulate_from_msp</span>(<span class="at">msp_uncertainty=</span>msp_uncert_mvn, <span class="at">msp_fit=</span>msp_fit, <span class="at">nsims=</span><span class="dv">10000</span>, <span class="at">subbasin_targets=</span>mc_targets, <span class="at">target_weights=</span>mc_weights)</span>
+<span id="cb20-16"><a href="appendixb.html#cb20-16" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="appendixb.html#cb20-17" tabindex="-1"></a><span class="co"># Bonus Functions</span></span>
+<span id="cb20-18"><a href="appendixb.html#cb20-18" tabindex="-1"></a>msp_smoothed    <span class="ot">&lt;-</span> <span class="fu">msp_smooth</span>(<span class="at">msp_sims=</span>msp_sims_mvn)</span>
+<span id="cb20-19"><a href="appendixb.html#cb20-19" tabindex="-1"></a>msp_pt_precip   <span class="ot">&lt;-</span> <span class="fu">msp_point_precip</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">shp=</span>mc_shapefile, <span class="at">mapping_aep=</span><span class="fl">0.01</span>, <span class="at">tabular_aeps=</span><span class="cn">NULL</span>)</span></code></pre></div>
 <p>Easy right? :)</p>
 </div>
 <div id="using-your-own-data-from-section-refprecipdata" class="section level2 hasAnchor" number="5.2">
 <h2><span class="header-section-number">B.2</span> Using Your Own Data from Section <a href="precipdata.html#precipdata">2</a><a href="appendixb.html#using-your-own-data-from-section-refprecipdata" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>This appendix presents an example workflow using the data you put together in Section <a href="precipdata.html#precipdata">2</a>. To begin, double click the RStudio Project File in the RMCmsp folder: <code>RMCmsp.Rproj</code>. This opens up an instance of RStudio. You should see “RMCmsp - RStudio” in the top left banner of RStudio. You will need to have <code>devtools</code> installed. From RStudio, type <code>install.packages("devtools")</code> into the Console. Once that is successfully installed, you should be able to run the following workflow:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="appendixb.html#cb18-1" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
-<span id="cb18-2"><a href="appendixb.html#cb18-2" tabindex="-1"></a><span class="fu">load_all</span>()</span>
-<span id="cb18-3"><a href="appendixb.html#cb18-3" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="appendixb.html#cb18-4" tabindex="-1"></a><span class="co"># Load the data</span></span>
-<span id="cb18-5"><a href="appendixb.html#cb18-5" tabindex="-1"></a>anmax    <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day.csv&quot;</span>))</span>
-<span id="cb18-6"><a href="appendixb.html#cb18-6" tabindex="-1"></a>metad    <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day-metadata.csv&quot;</span>))</span>
-<span id="cb18-7"><a href="appendixb.html#cb18-7" tabindex="-1"></a>prism    <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(idir,  <span class="st">&quot;prism_crop.rds&quot;</span>))</span>
-<span id="cb18-8"><a href="appendixb.html#cb18-8" tabindex="-1"></a>targets0 <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;target_locations.csv&quot;</span>))</span>
-<span id="cb18-9"><a href="appendixb.html#cb18-9" tabindex="-1"></a>weights  <span class="ot">&lt;-</span> targets0<span class="sc">$</span>area</span>
-<span id="cb18-10"><a href="appendixb.html#cb18-10" tabindex="-1"></a>targets  <span class="ot">&lt;-</span> <span class="fu">subset</span>(targets0, <span class="at">select=</span><span class="fu">c</span>(<span class="st">&quot;lon&quot;</span>,<span class="st">&quot;lat&quot;</span>))</span>
-<span id="cb18-11"><a href="appendixb.html#cb18-11" tabindex="-1"></a></span>
-<span id="cb18-12"><a href="appendixb.html#cb18-12" tabindex="-1"></a><span class="co"># shapefile is optional</span></span>
-<span id="cb18-13"><a href="appendixb.html#cb18-13" tabindex="-1"></a>shp      <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">vect</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;basin.shp&quot;</span>))</span>
-<span id="cb18-14"><a href="appendixb.html#cb18-14" tabindex="-1"></a></span>
-<span id="cb18-15"><a href="appendixb.html#cb18-15" tabindex="-1"></a><span class="co"># Step 1</span></span>
-<span id="cb18-16"><a href="appendixb.html#cb18-16" tabindex="-1"></a>msp_workspace   <span class="ot">&lt;-</span> <span class="fu">msp_setup</span>(<span class="at">anmax=</span>anmax, <span class="at">metadata=</span>metad, <span class="at">prism_rasters=</span>prism, <span class="at">subbasin_targets=</span>targets)</span>
-<span id="cb18-17"><a href="appendixb.html#cb18-17" tabindex="-1"></a><span class="fu">plot_at_site_gev</span>(<span class="at">at_site_gev =</span> msp_workspace<span class="sc">$</span>gev.fits, <span class="at">shp=</span>shp) <span class="co"># if you don&#39;t have shp, just remove that argument</span></span>
-<span id="cb18-18"><a href="appendixb.html#cb18-18" tabindex="-1"></a></span>
-<span id="cb18-19"><a href="appendixb.html#cb18-19" tabindex="-1"></a><span class="co"># Step 2</span></span>
-<span id="cb18-20"><a href="appendixb.html#cb18-20" tabindex="-1"></a>msp_fit         <span class="ot">&lt;-</span> <span class="fu">fit_msp</span>(<span class="at">msp_workspace=</span>msp_workspace, <span class="at">covar.mod=</span><span class="st">&#39;twhitmat&#39;</span>)</span>
-<span id="cb18-21"><a href="appendixb.html#cb18-21" tabindex="-1"></a></span>
-<span id="cb18-22"><a href="appendixb.html#cb18-22" tabindex="-1"></a><span class="co"># Step 3</span></span>
-<span id="cb18-23"><a href="appendixb.html#cb18-23" tabindex="-1"></a>msp_uncert_mvn  <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span>
-<span id="cb18-24"><a href="appendixb.html#cb18-24" tabindex="-1"></a></span>
-<span id="cb18-25"><a href="appendixb.html#cb18-25" tabindex="-1"></a><span class="co"># Step 4</span></span>
-<span id="cb18-26"><a href="appendixb.html#cb18-26" tabindex="-1"></a>msp_sims_mvn    <span class="ot">&lt;-</span> <span class="fu">simulate_from_msp</span>(<span class="at">msp_uncertainty=</span>msp_uncert_mvn, <span class="at">msp_fit=</span>msp_fit, <span class="at">nsims=</span><span class="dv">10000</span>, <span class="at">subbasin_targets=</span>targets, <span class="at">target_weights=</span>weights)</span>
-<span id="cb18-27"><a href="appendixb.html#cb18-27" tabindex="-1"></a></span>
-<span id="cb18-28"><a href="appendixb.html#cb18-28" tabindex="-1"></a><span class="co"># Bonus Functions</span></span>
-<span id="cb18-29"><a href="appendixb.html#cb18-29" tabindex="-1"></a>msp_smoothed    <span class="ot">&lt;-</span> <span class="fu">msp_smooth</span>(<span class="at">msp_sims=</span>msp_sims_mvn)</span>
-<span id="cb18-30"><a href="appendixb.html#cb18-30" tabindex="-1"></a>msp_pt_precip   <span class="ot">&lt;-</span> <span class="fu">msp_point_precip</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">shp=</span>shp, <span class="at">mapping_aep=</span><span class="fl">0.01</span>, <span class="at">tabular_aeps=</span><span class="cn">NULL</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="appendixb.html#cb21-1" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
+<span id="cb21-2"><a href="appendixb.html#cb21-2" tabindex="-1"></a><span class="fu">load_all</span>()</span>
+<span id="cb21-3"><a href="appendixb.html#cb21-3" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="appendixb.html#cb21-4" tabindex="-1"></a><span class="co"># Load the data</span></span>
+<span id="cb21-5"><a href="appendixb.html#cb21-5" tabindex="-1"></a>anmax    <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day.csv&quot;</span>))</span>
+<span id="cb21-6"><a href="appendixb.html#cb21-6" tabindex="-1"></a>metad    <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;atsite-anmax-&quot;</span>,dur,<span class="st">&quot;-day-metadata.csv&quot;</span>))</span>
+<span id="cb21-7"><a href="appendixb.html#cb21-7" tabindex="-1"></a>prism    <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="fu">paste0</span>(idir,  <span class="st">&quot;prism_crop.rds&quot;</span>))</span>
+<span id="cb21-8"><a href="appendixb.html#cb21-8" tabindex="-1"></a>targets0 <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;target_locations.csv&quot;</span>))</span>
+<span id="cb21-9"><a href="appendixb.html#cb21-9" tabindex="-1"></a>weights  <span class="ot">&lt;-</span> targets0<span class="sc">$</span>area</span>
+<span id="cb21-10"><a href="appendixb.html#cb21-10" tabindex="-1"></a>targets  <span class="ot">&lt;-</span> <span class="fu">subset</span>(targets0, <span class="at">select=</span><span class="fu">c</span>(<span class="st">&quot;lon&quot;</span>,<span class="st">&quot;lat&quot;</span>))</span>
+<span id="cb21-11"><a href="appendixb.html#cb21-11" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="appendixb.html#cb21-12" tabindex="-1"></a><span class="co"># shapefile is optional</span></span>
+<span id="cb21-13"><a href="appendixb.html#cb21-13" tabindex="-1"></a>shp      <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">vect</span>(<span class="fu">paste0</span>(idir, <span class="st">&quot;basin.shp&quot;</span>))</span>
+<span id="cb21-14"><a href="appendixb.html#cb21-14" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="appendixb.html#cb21-15" tabindex="-1"></a><span class="co"># Step 1</span></span>
+<span id="cb21-16"><a href="appendixb.html#cb21-16" tabindex="-1"></a>msp_workspace   <span class="ot">&lt;-</span> <span class="fu">msp_setup</span>(<span class="at">anmax=</span>anmax, <span class="at">metadata=</span>metad, <span class="at">prism_rasters=</span>prism, <span class="at">subbasin_targets=</span>targets)</span>
+<span id="cb21-17"><a href="appendixb.html#cb21-17" tabindex="-1"></a><span class="fu">plot_at_site_gev</span>(<span class="at">at_site_gev =</span> msp_workspace<span class="sc">$</span>gev.fits, <span class="at">shp=</span>shp) <span class="co"># if you don&#39;t have shp, just remove that argument</span></span>
+<span id="cb21-18"><a href="appendixb.html#cb21-18" tabindex="-1"></a></span>
+<span id="cb21-19"><a href="appendixb.html#cb21-19" tabindex="-1"></a><span class="co"># Step 2</span></span>
+<span id="cb21-20"><a href="appendixb.html#cb21-20" tabindex="-1"></a>msp_fit         <span class="ot">&lt;-</span> <span class="fu">fit_msp</span>(<span class="at">msp_workspace=</span>msp_workspace, <span class="at">covar.mod=</span><span class="st">&#39;twhitmat&#39;</span>)</span>
+<span id="cb21-21"><a href="appendixb.html#cb21-21" tabindex="-1"></a></span>
+<span id="cb21-22"><a href="appendixb.html#cb21-22" tabindex="-1"></a><span class="co"># Step 3</span></span>
+<span id="cb21-23"><a href="appendixb.html#cb21-23" tabindex="-1"></a>msp_uncert_mvn  <span class="ot">&lt;-</span> <span class="fu">msp_uncertainty</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">method=</span><span class="st">&quot;mvn&quot;</span>, <span class="at">nsims=</span><span class="dv">100</span>)</span>
+<span id="cb21-24"><a href="appendixb.html#cb21-24" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="appendixb.html#cb21-25" tabindex="-1"></a><span class="co"># Step 4</span></span>
+<span id="cb21-26"><a href="appendixb.html#cb21-26" tabindex="-1"></a>msp_sims_mvn    <span class="ot">&lt;-</span> <span class="fu">simulate_from_msp</span>(<span class="at">msp_uncertainty=</span>msp_uncert_mvn, <span class="at">msp_fit=</span>msp_fit, <span class="at">nsims=</span><span class="dv">10000</span>, <span class="at">subbasin_targets=</span>targets, <span class="at">target_weights=</span>weights)</span>
+<span id="cb21-27"><a href="appendixb.html#cb21-27" tabindex="-1"></a></span>
+<span id="cb21-28"><a href="appendixb.html#cb21-28" tabindex="-1"></a><span class="co"># Bonus Functions</span></span>
+<span id="cb21-29"><a href="appendixb.html#cb21-29" tabindex="-1"></a>msp_smoothed    <span class="ot">&lt;-</span> <span class="fu">msp_smooth</span>(<span class="at">msp_sims=</span>msp_sims_mvn)</span>
+<span id="cb21-30"><a href="appendixb.html#cb21-30" tabindex="-1"></a>msp_pt_precip   <span class="ot">&lt;-</span> <span class="fu">msp_point_precip</span>(<span class="at">msp_fit=</span>msp_fit, <span class="at">shp=</span>shp, <span class="at">mapping_aep=</span><span class="fl">0.01</span>, <span class="at">tabular_aeps=</span><span class="cn">NULL</span>)</span></code></pre></div>
 <p>Easy right? :)</p>
 
 </div>

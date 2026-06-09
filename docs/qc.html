@@ -29,7 +29,7 @@ R package to perform precipitation-frequency analysis to support RMC IES studies
 <meta name="author" content="Andrew Verdin" />
 
 
-<meta name="date" content="2026-06-08" />
+<meta name="date" content="2026-06-09" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -165,7 +165,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3.5" data-path="workflow.html"><a href="workflow.html#bonusfunctions"><i class="fa fa-check"></i><b>3.5</b> Step 5: Bonus Functions</a>
 <ul>
 <li class="chapter" data-level="3.5.1" data-path="workflow.html"><a href="workflow.html#mspsmooth"><i class="fa fa-check"></i><b>3.5.1</b> <code>msp_smooth( )</code></a></li>
-<li class="chapter" data-level="3.5.2" data-path="workflow.html"><a href="workflow.html#msppointprecip"><i class="fa fa-check"></i><b>3.5.2</b> <code>msp_point_precip( )</code></a></li>
+<li class="chapter" data-level="3.5.2" data-path="workflow.html"><a href="workflow.html#plotmsp"><i class="fa fa-check"></i><b>3.5.2</b> <code>plot_msp( )</code></a></li>
+<li class="chapter" data-level="3.5.3" data-path="workflow.html"><a href="workflow.html#msppointprecip"><i class="fa fa-check"></i><b>3.5.3</b> <code>msp_point_precip( )</code></a></li>
 </ul></li>
 </ul></li>
 <li class="appendix"><span><b>Appendix</b></span></li>
@@ -213,7 +214,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>threshold</code>: the ratio value above which a pair is flagged. Defaults to 2</li>
 <li><code>verbose</code>: logical. If TRUE, prints a summary to the console. Defaults to TRUE</li>
 </ol>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="qc.html#cb15-1" tabindex="-1"></a>anmax_ratios <span class="ot">&lt;-</span> <span class="fu">qc_ratio_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">n_compare=</span><span class="dv">3</span>, <span class="at">threshold=</span><span class="dv">2</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="qc.html#cb18-1" tabindex="-1"></a>anmax_ratios <span class="ot">&lt;-</span> <span class="fu">qc_ratio_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">n_compare=</span><span class="dv">3</span>, <span class="at">threshold=</span><span class="dv">2</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
 </div>
 <div id="outlier-test" class="section level2 hasAnchor" number="4.2">
 <h2><span class="header-section-number">A.2</span> Outlier Test<a href="qc.html#outlier-test" class="anchor-section" aria-label="Anchor link to header"></a></h2>
@@ -225,7 +226,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>log_transform</code>: logical. If TRUE, the test is performed on log(data) and boundard are back-transformed for reporting. Defaults to TRUE</li>
 <li><code>verbose</code>: logical. If TRUE, prints a summary to the console. Defaults to TRUE</li>
 </ol>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="qc.html#cb16-1" tabindex="-1"></a>anmax_outliers <span class="ot">&lt;-</span> <span class="fu">qc_outlier_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">k=</span><span class="dv">2</span>, <span class="at">log_transform=</span><span class="cn">TRUE</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="qc.html#cb19-1" tabindex="-1"></a>anmax_outliers <span class="ot">&lt;-</span> <span class="fu">qc_outlier_test</span>(<span class="at">data=</span>mc_anmax, <span class="at">k=</span><span class="dv">2</span>, <span class="at">log_transform=</span><span class="cn">TRUE</span>, <span class="at">verbose=</span><span class="cn">TRUE</span>)</span></code></pre></div>
 </div>
 <div id="extreme-gev-parameters" class="section level2 hasAnchor" number="4.3">
 <h2><span class="header-section-number">A.3</span> Extreme GEV Parameters<a href="qc.html#extreme-gev-parameters" class="anchor-section" aria-label="Anchor link to header"></a></h2>

@@ -1,6 +1,10 @@
 fig:atsite
 fig:mccomp
 fig:bufcomp
+fig:smooth
+fig:sims
+fig:smoothvssims
+fig:mappedaep
 intro
 precipdata
 download
@@ -16,6 +20,7 @@ mspuncertainty
 simulatefrommsp
 bonusfunctions
 mspsmooth
+plotmsp
 msppointprecip
 qc
 ratio-test
