@@ -1,6 +1,8 @@
 bookdown::gitbook:
   css: style.css
+  split_by: chapter
   config:
+    sharing: null
     toc:
       before: |
         <li><a href="./">MSP Precipitation-Frequency</a></li>

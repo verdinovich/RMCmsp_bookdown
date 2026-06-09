@@ -3,25 +3,42 @@
 
 This appendix provides a suite of quality control tests to be employed to ensure the precipitation dataset does not contain erroneously large observations. Note that if an observation is flagged it is not always recommended to automatically remove that observation. Rather, a closer inspection is warranted. Are nearby stations reporting a similarly large value? Is there an historic storm that occurred on that date in the region? Build the case for why the observation needs to be thrown out. Don't build the case on why the observation needs to remain in the database. Innocent until proven guilty!
 
-## Percent Completion Test
-The annual maximum series (AMS) must have a percent completeness of at least 90% for the year for the observation to be accepted. Missing observations exceeding 10% of the year resulted in automatic removal from the dataset. 
-
-Two exceptions may be applied to allow a lower percent completeness threshold for large observations. First, if the observation exceeds the 50th percentile of the site AMS and had at least 50% completeness for the calendar year, the observation may be retained. Second, if the observation exceeds the 95th percentile of the site AMS, regardless of percent completeness, the observation may be retained. The goal behind these thresholds is to accurately capture the maximum rainfall observation for each year as much as possible. The selected thresholds are based on the quality control criteria applied in many of the NOAA Atlas 14 Volumes.
-
 ## Ratio Test
 The ratio test is a simple heuristic for identifying observations that may have been recorded erroneously. The ratio of the largest and second-largest observations in the AMS is computed, and any observations exceeding a ratio of 2 are flagged for manual inspection. Flagged observations are then corroborated against event dates and magnitudes at surrounding stations. In data sparse regions a gridded dataset may be suitable for verification. 
+
+The function `qc_ratio_test( )` provides a simple summary of flagged observations for each station. This function is flexible enough to allow the user to specify how many observations to compare. For example, the first and second observations may not be significantly different from each other, but the second and third observations may be where the anomaly occurs. The function `qc_ratio_test( )` takes the following input:
+
+1. `data`: the matrix of annual maxima to be QC'd. Rows are years, columns are stations, station ID should be the column names to enable identification of outliers
+2. `n_compare`: the number of observations to compare. For example, `n_compare = 3` computes ratios `p1/p2` and `p2/p3`
+3. `threshold`: the ratio value above which a pair is flagged. Defaults to 2
+4. `verbose`: logical. If TRUE, prints a summary to the console. Defaults to TRUE
+
+```{r eval=FALSE}
+anmax_ratios <- qc_ratio_test(data=mc_anmax, n_compare=3, threshold=2, verbose=TRUE)
+```
 
 ## Outlier Test
 The outlier test was implemented as a simplified outlier detection test compared to tests such as the Grubbs-Beck or Multiple Grubbs-Beck tests. Observations falling below 2 standard deviations from the median of the AMS may be removed as a low outlier. Visual inspection of the AMS plotting positions can be further evidence to warrant removal. Observations falling above 2 standard deviations from the median are flagged as high outliers and should be investigated in the same way as observations flagged in the ratio test. 
 
+The function `qc_outlier_test( )` provides a simple summary of flagged observations, and specifies whether they are low or high outliers, for each station. This function computes the at-site median and standard deviation, and flags observations that fall outside the user-specified number of standard deviations from the median. Another option in the function is the ability to log-transform the data before identifying outliers. The function `qc_outlier_test( )` takes the following input:
+
+1. `data`: the matrix of annual maxima to be QC'd. Rows are years, columns are stations, and station ID should be the column names to enable identification of outliers
+2. `k`: the number of standard deviations from the median used as the outlier threshold. Default is 2
+3. `log_transform`: logical. If TRUE, the test is performed on log(data) and boundard are back-transformed for reporting. Defaults to TRUE
+4. `verbose`: logical. If TRUE, prints a summary to the console. Defaults to TRUE
+
+```{r eval=FALSE}
+anmax_outliers <- qc_outlier_test(data=mc_anmax, k=2, log_transform=TRUE, verbose=TRUE)
+```
+
 ## Extreme GEV Parameters
-As a qualitative quality control step, the site-specific GEV parameters can be plotted using the `plot_at_site_gev( )` function to identify sites with anomalous values. Special attention should be given to the shape parameter, as extreme positive or negative values can produce very steep or flat frequency curves that may be the result of one or more outliers. Sites flagged as having extreme GEV parameters should be reviewed for outliers to determine whether the parameters reflect genuine hydrologic behavior or are artifacts of a short and/or sparse period of record. 
+As a qualitative quality control step, the site-specific GEV parameters can be plotted using the `plot_at_site_gev( )` function to identify sites with anomalous values (See Chapter \@ref(mspsetup)). Special attention should be given to the shape parameter, as extreme positive or negative values can produce very steep or flat frequency curves that may be the result of one or more outliers. Sites flagged as having extreme GEV parameters should be reviewed for outliers to determine whether the parameters reflect genuine hydrologic behavior or are artifacts of a short and/or sparse period of record. 
 
 
 
 
 
-# Example Workflow {#example}
+# Example Workflow {#appendixb}
 
 ## Using the Data from `RMCmsp`
 

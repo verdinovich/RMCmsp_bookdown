@@ -51,7 +51,7 @@ The `msp_setup( )` function returns a list with 12 items:
 12. `metadata`: the station metadata for your project
 
 
-## Step 2: `fit_msp( )` {fitmsp}
+## Step 2: `fit_msp( )` {#fitmsp}
 
 Your workspace is now set up with everything you need to fit the MSP model! The `fit_msp( )` function takes three input parameters, but only one is really needed to get started:
 
@@ -93,11 +93,16 @@ Assuming the general MSP model converged and fitted successfully, you can now ta
 msp_uncert_mvn   <- msp_uncertainty(msp_fit=msp_fit, method="mvn", nsims=100)
 ```
 
-As mentioned in the introduction, there are technically two methods to choose from when running the `msp_uncertainty( )` function. Based on testing at two very different watersheds, you should choose `method="mvn"`. This uses the general MSP model fitted values and variance covariance matrix to produce random samples from a multivariate normal (i.e., mvn) distribution. The other method (`method="boot"`) will take random samples from the general MSP model and re-fit an MSP model to each. Remember how long it took to fit the general MSP model? Multiply that by 300. It takes forever. Only do it if you like waiting.  Here are validation figures from those two watersheds:
+As mentioned in the introduction, there are technically two methods to choose from when running the `msp_uncertainty( )` function. Based on testing at two very different watersheds, you should choose `method="mvn"` until you're sure you're running your final analysis. The `mvn` method uses the general MSP model fitted values and variance covariance matrix to produce random samples from a multivariate normal (i.e., mvn) distribution. The other method (`method="boot"`) will take random samples from the general MSP model and re-fit an MSP model to each. Remember how long it took to fit the general MSP model? Multiply that by 300. Or maybe only 50 because it's parallelized. Either way, it takes forever. I just ran an analysis and it took 10 hours, compared to 1 second from `mvn`. Only do it if you like waiting (or it's your final analysis).  Here are validation figures from those two watersheds:
 
-```{r fitspat0, out.width='99%', fig.asp=.75, fig.align='center', fig.cap="Output from fit_spatial_GLM function, describing the spatial GEV model. ", echo=FALSE}
-knitr::include_graphics("step4a.png")
+```{r mccomp, out.width='99%', fig.asp=.75, fig.align='center', fig.cap="Comparison of multivariate normal and bootstrap simulation methods of uncertainty for a small semi-arid watershed. ", echo=FALSE}
+knitr::include_graphics("mc_mvn_vs_boot_nonparametric.png")
 ```
+```{r bufcomp, out.width='99%', figasp=.75, fig.align='center', fig.cap="Same as above but for a moderately sized Appalachian watershed", echo=FALSE}
+knitr::include_graphics("buford_mvn_vs_boot_nonparametric.png")
+```
+
+As can be seen, there is a slight reduction in uncertainty when using `method=mvn`, which is more pronounced at larger scales and/or complex topography and orographic effects. Therefore, use `method=mvn` until you're done testing, running sensitivities, alternate study regions, etc. When you're finalizing your report, use `method=boot`. 
 
 The `msp_uncertainty( )` function returns a list with four items:
 
@@ -127,12 +132,94 @@ The `simulate_from_msp( )` function returns a list with 10 items:
 7. `target_shapes`: GEV shape parameters for each uncertainty sample and each target location (rows are samples, columns are subbasin targets)
 8. `general_msp_used`: boolean indicating whether the general MSP model was used. This should always be TRUE
 9. `msp_uncertainty`: the output from the `msp_uncertainty( )` function that was used as input for `simulate_from_msp( )`
-10. `msp_fit`: the output from the `fit_msp( )` function that was used as input for `simulate_from_msp( )`
+10. `msp_fit`: the fitted general MSP model and accompanying information provided by the `fit_msp( )` function, used as input for `simulate_from_msp( )`
 
 ## Step 5: Bonus Functions {#bonusfunctions}
 
 ### `msp_smooth( )` {#mspsmooth} 
+The output from the `simulate_from_msp( )` function is a nonparametric precipitation-frequency curve, which can be problematic when using this analysis with a tool such as RRFT. RRFT does accept empirical precipitation-frequency information, but if you want to extrapolate to rarer AEPs then a GEV approximation is preferred. The `msp_smooth( )` function takes the output from the `simulate_from_msp( )` function and fits a GEV curve to each of the nonparametric precipitation-frequency curves to approximate the 90% confidence interval. The GEV parameters for the mean precipitation-frequency curve are also computed. Finally, the pseudo-ERL (pERL) is computed so you can put the mean GEV and ERL into RRFT to estimate your precipitation-frequency curve. The `msp_smooth( )` function takes the following input:
+
+1. `msp_sims`: output from the `simulate_from_msp( )` function
+2. `probs`: quantiles over which to apply the optimization routine. Default is c(0.001, 0.01, seq(0.1, 0.9, 0.1), 0.99, 0.999, 0.9999)
+3. `ci`: the size of the confidence interval in percent (e.g., 90 equates to the 90% confidence interval). Default is 90
+
+```{r eval=FALSE}
+msp_smooth_mvn  <- msp_smooth(msp_sims=msp_sims_mvn)
+```
+
+The `msp_smooth( )` function returns a list with 6 items:
+
+1. `gev.params`: a matrix with 5 columns (`gev.loc`, `gev.scale`, `gev.shape`, `optim`, `convergence`). First three columns are the GEV parameters, `optim` is the optimization value, and `convergence` indicates whether the optimizer converged or not (0 indicates convergence). Number of rows correspond to number of simulations from `simulate_from_msp( )` plus 1 (the extra row is the initial model fit from `fit_msp( )`)
+2. `gev.quants`: a matrix with the quantiles for each simulation. Number of rows corresponds to the `probs`; number of columns corresponds to the number of simulations plus 1
+3. `gev.table`: a summary table ready to drop into a report
+4. `ci`: the confidence interval specified
+5. `mean.gev.params`: the GEV parameters that best replicate the mean precipitation-frequency curve
+6. `gev.erl`: the pERL associated with `mean.gev.params`
+
+### `plot_msp( )` {#plotmsp}
+The current implementation of the `plot_msp( )` function can produce three precipitation-frequency plots: 
+
+1. a comparison of the nonparametric (i.e., output from `simulate_from_msp( )`) and GEV approximated (i.e., output from `msp_smooth( )`) precipitation-frequency curves
+2. the nonparametric precipitation-frequency curve
+3. the GEV approimated precipitation-frequency curve
+
+The function takes the following input:
+
+1. `msp_smooth`: output from the `msp_smooth( )` function. Default is NULL
+2. `msp_sims`: output from the `simulate_from_msp( )` function. Default is NULL
+3. `max_aep`: the maximum annual exceedance probability for the x-axis. Default is 0.99
+4. `min_aep`: the minimum annual exceedance probability for the x-axis. Default is 1E-4
+5. `precip_units`: units for precipitation depth, for the y-axis label. Default is "in"
+6. `fname`: the filename to save the image to your computer. Internally using the `png( )` function so put `.png` at the end!
+
+If you just want the plot the render in your R session, do not specify `fname`. The function defaults are pretty basic and shouldn't need modification. There are three options for using this function, as specified here:
+
+```{r eval=FALSE}
+plot_msp(msp_smooth=msp_smooth_mvn) # just plots the GEV approximated curves
+plot_msp(msp_sims=msp_sims_mvn) # just plots the nonparametric curves
+plot_msp(msp_smooth=msp_smooth_mvn, msp_sims=msp_sims_mvn) # plots a comparison of nonparametric and GEV approximated curves
+```
+
+```{r smooth, out.width='99%', fig.asp=.75, fig.align='center', fig.cap="Basin-average precipitation-frequency analysis using GEV approximation of nonparametric samples.", echo=FALSE}
+knitr::include_graphics("msp_smooth_test.png")
+```
+```{r sims, out.width='99%', figasp=.75, fig.align='center', fig.cap="Basin-average precipitation-frequency analysis using nonparametric samples.", echo=FALSE}
+knitr::include_graphics("msp_sims_test.png")
+```
+```{r smoothvssims, out.width='99%', figasp=.75, fig.align='center', fig.cap="Comparison of GEV approximation and nonparametric curves.", echo=FALSE}
+knitr::include_graphics("msp_comparison_test.png")
+```
 
 ### `msp_point_precip( )` {#msppointprecip}
+Maybe you want a quick comparison to the NOAA Atlas 14 grids? The `msp_point_precip( )` function can do that for you. It can also produce basin-average precipitation-frequency estimates based upon the basin-average GEV parameters. The `msp_point_precip( )` function takes the following arguments:
 
+1. `msp_fit`: the fitted general MSP model and accompanying information provided by the `fit_msp( )` function
+2. `shp`: optionally, your watershed shapefile used to compute basin-average GEV parameters and point precipitation-frequency
+3. `mapping_aep`: annual exceedance probability for the gridded point precipitation-frqeuency map
+4. `tabular_aeps`: optionally, the annual exceedance probabilities for which the basin-average point precipitation-frequency estimates will be reported
 
+The `msp_point_precip( )` function returns a list with either 6 or 11 items, depending on whether the watershed shapefile was provided:
+
+1. `msp_location`: a raster of class `SpatRaster` with the GEV location parameter at each grid cell
+2. `msp_scale`: a raster of class `SpatRaster` with the GEV scale parameter at each grid cell
+3. `msp_shape`: a raster of class `SpatRaster` with the GEV shape parameter at each grid cell. Note the shape is constant so this is a single value for all grid cells
+4. `mapped_aep`: a raster of class `SpatRaster` with the point precipitation-frequency estimates for the specified `aep` at each grid cell 
+5. `shp`: the shapefile used to calculate the `bavg_location`, `bavg_scale`, `bavg_shape`, and `pf_table`, in the same projection as `mapped_aep`
+6. `aep`: the specified aep for the `mapped_aep` raster
+7. `bavg_location`: the basin-average GEV location parameter, only returned if `shp` is provided as input
+8. `bavg_scale`: the basin-average GEV scale parameter, only returned if `shp` is provided as input
+9. `bavg_shape`: the basin-average GEV shape parameter, only returned if `shp` is provided as input
+10. `pf_table`: the basin-average point precipitation-frequency estimates for the `tabular_aeps`, only returned if `shp` is provided as input
+11. `msp_fit`: the fitted general MSP model and accompanying information provided by the `fit_msp( )` function, used as input for `msp_point_precip( )`
+
+I will be working to develop a streamlined plotting function for this function. In the meantime, to visualize the mapped precipitation-frequency estimates you can use the following R code:
+
+```{r eval=FALSE}
+msp_pt_precip <- msp_point_precip(msp_fit=msp_fit, shp=mc_shapefile, mapping_aep=0.01, tabular_aeps=NULL)
+terra::plot(msp_pt_precip$mapped_aep, main=paste("AEP:",msp_pt_precip$aep))
+terra::plot(msp_pt_precip$shp, add=TRUE)
+```
+
+```{r mappedaep, out.width='99%', figasp=.75, fig.align='center', fig.cap="Point precipitation-frequency estimates for the study region. Shapefile shown as outline for reference. Units are millimeters.", echo=FALSE}
+knitr::include_graphics("mapped_aep.png")
+```

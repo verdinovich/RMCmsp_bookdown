@@ -5,12 +5,12 @@ date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 documentclass: book
 bibliography: [book.bib, packages.bib]
-# url: your book url like https://bookdown.org/yihui/bookdown
+url: 'https://verdinovich.github.io/RMCmsp_bookdown/'
 # cover-image: path to the social sharing image like images/cover.jpg
 description: |
-  This is a minimal example of using the bookdown package to write a book.
-  The HTML output format for this example is bookdown::gitbook,
-  set in the _output.yml file.
+  This provides an overview of the data processing and analysis for the R package
+  RMCmsp, which provides streamlined wrapper functions for the SpatialExtremes
+  R package to perform precipitation-frequency analysis to support RMC IES studies.
 link-citations: yes
 github-repo: rstudio/bookdown-demo
 ---
@@ -52,7 +52,7 @@ Currently, the `simulate_from_msp( )` function requires output from the `msp_unc
 
 Additionally, note that the `gev.erl` is NOT based on the number of simulations, but rather is a function of the input data. You can run 2 uncertainty simulations (e.g., `nsims=2` in `msp_uncertainty( )`) and end up with the exact same ERL you get when you run `nsims=500`. However, the `mean.gev.params` are a function of the number of simulations and need to be estimated robustly (e.g., `nsims=100` minimum). You shouldn't need the mean GEV parameters and ERL for most applications, but we include them for convenience. Putting the `mean.gev.params` and `gev.erl` into software like TotalRisk will get you a GEV curve with uncertainty very quickly and efficiently :)
 
-Before any of these steps can be taken, however, the details on data preparation are discussed. In addition to the data preparation, quality control is crucial (see Appendix \@ref(qc) for a thorough quality control protocol). Following the data preparation discussion, each of the steps listed above will be discussed in detail in its own section. An example workflow and a list of required packages are provided in Appendix \@ref(example). 
+Before any of these steps can be taken, however, the details on data preparation are discussed. In addition to the data preparation, quality control is crucial (see Appendix \@ref(qc) for a thorough quality control protocol). Following the data preparation discussion, each of the steps listed above will be discussed in detail in its own section. An example workflow and a list of required packages are provided in Appendix \@ref(appendixb). 
 
 If you have your data ready to go, skip to Chapter \@ref(workflow)
 

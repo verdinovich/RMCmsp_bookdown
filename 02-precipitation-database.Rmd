@@ -1,6 +1,6 @@
 # Preparing the Precipitation Database {#precipdata}
 
-The example workflow presented in this document relies on daily precipitation observations from the Global Historical Climatology Network (GHCN; Menne et al. 2012). Download the station inventory for the GHCN-daily dataset ([GHCNd](https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-inventory.txt)). Pull the data into a spreadsheet and save as a csv named `ghcnd-inventory.csv`. Give the columns the following names: `ghcnd_id`, `lat`, `lon`, `varid`, `startyr`, `endyr`. The `startyr` and `endyr` columns aren’t used in this analysis. Note that you need to define two sub-directories within the MSP analysis directory named `Data` and `input_files`. `Data` will hold the GHCNd station data you are going to download; `input_files` will save the 
+The example workflow presented in this document relies on daily precipitation observations from the Global Historical Climatology Network (GHCN; Menne et al. 2012). Download the station inventory for the GHCN-daily dataset ([GHCNd](https://www.ncei.noaa.gov/pub/data/ghcn/daily/ghcnd-inventory.txt)). Pull the data into a spreadsheet and save as a csv named `ghcnd-inventory.csv`. Give the columns the following names: `ghcnd_id`, `lat`, `lon`, `varid`, `startyr`, `endyr`. The `startyr` and `endyr` columns aren’t used in this analysis. Note that you need to define two sub-directories within the MSP analysis directory named `Data` and `input_files`. `Data` will hold the GHCNd station data you are going to download; `input_files` will save the resulting annual maxima and metadata, along with all other required inputs for the MSP analysis.
 
 ```{r}
 df <- read.csv("ghcnd-inventory.csv")
@@ -8,20 +8,22 @@ head(df)
 ```
 ## Download GHCNd stations {#download}
 
-Plot the stations in GIS with your basin shapefile and pertinent raster data to assist in the definition of a study region surrounding the basin. Consult a hydrometeorologist (such as John England, Samantha Hartke, or Andrew Verdin) if you need help defining a bounding box. Once you have the bounding box defined, create a subset of the station inventory and download the data for those stations using the following R code (`0a_download_ghcnd.R`):
+Plot the stations in GIS with your basin shapefile and pertinent raster data to assist in the definition of a study region surrounding the basin. Consult a hydrometeorologist (such as John England, Samantha Hartke, or yours truly) if you need help defining a bounding box. Once you have the bounding box defined, create a subset of the station inventory and download the data for those stations using the following R code (`0a_download_ghcnd.R`):
 
 ```{r eval=FALSE}
+library(curl)
+
 # set your working directory to the folder you want to save all the GHCNd data
-setwd(“C:/Path/To/MSP/Analysis/Data/”)
+setwd("C:/Path/To/MSP/Analysis/Data/")
 
 # define the output directory - this will be the input to the MSP, call it "input_data"
 idir = "C:/Path/To/MSP/Analysis/input_data/"
 
 # read in the inventory file, do NOT put the inventory file in your data folder. 
-df.m = read.csv(“C:/Path/To/MSP/Analysis/ghcnd-inventory.csv”)  
+df.m = read.csv("C:/Path/To/MSP/Analysis/ghcnd-inventory.csv")  
 
 # take subset of inventory file; constrain to bounding box and only PRCP stations
-# bounding box: -85 to -82.8 longitude; 33.5 to 35.5 latitude
+# change your bounding box as required!
 df.sub = subset(df.m, lon > -85 & lon < -82.8 & lat > 33.5 & lat < 35.5)
 df.sub = subset(df.sub, varid == "PRCP")
 
@@ -32,7 +34,7 @@ pb = txtProgressBar(min=0,max=nrow(df.sub),style=3)
 # destfile is saving it to your current working directory, use getwd() to check where
 for(i in 1:nrow(df.sub)){
   setTxtProgressBar(pb,i)
-  download.file(url=paste0("https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/",df.sub$ghcnd_id[i],".csv"),
+  curl_download(url=paste0("https://www.ncei.noaa.gov/data/global-historical-climatology-network-daily/access/",df.sub$ghcnd_id[i],".csv"),
                 destfile=paste0(df.sub$ghcnd_id[i],".csv"))
 }
 
@@ -52,22 +54,25 @@ library(plyr)
 df.meta = read.csv(paste0(idir,"GHCNd-metadata.csv"))
 
 # fn is a list of all filenames; fns is the same with “.csv” removed (just site ID)
-fn = list.files(pattern=”.csv”)
+fn = list.files(pattern=".csv")
 fns = unlist(strsplit(fn, split=".csv"))
 
 # start with some arbitrary min and max dates – update as needed for your analysis
-mind = ymd(“2005-01-01”)
-maxd = ymd(“2005-12-31”)
+mind = ymd("2005-01-01")
+maxd = ymd("2005-12-31")
 
 # loop through and update ‘mind’ and ‘maxd’ variables as needed
+pb = txtProgressBar(min=0, max=length(fn), style=3)
 for(i in 1:length(fn)){
+  setTxtProgressBar(pb,i)
+  
   df = read.csv(fn[i])
   if(min(ymd(df$DATE)) < mind) mind = min(ymd(df$DATE))
   if(max(ymd(df$DATE)) > maxd) maxd = max(ymd(df$DATE))
 }
 
 # define vector of all dates, and the matrix that will hold all the data
-full_dates = data.frame(DATE=seq.Date(from=ymd(mind), to=ymd(maxd), by=”day”))
+full_dates = data.frame(DATE=seq.Date(from=ymd(mind), to=ymd(maxd), by="day"))
 df.daily = matrix(NA, nrow=nrow(full_dates), ncol=length(fn))
 
 # loop through and populate that matrix
@@ -85,7 +90,7 @@ for(i in 1:ncol(df.daily)){
 colnames(df.daily) = fns
 
 # save it. do NOT save the data matrix to the data folder
-write.csv(df.daily, paste0(idir,“ghcn-daily.csv”), row.names=FALSE)
+write.csv(df.daily, paste0(idir,"ghcn-daily.csv"), row.names=FALSE)
 ```
 
 ## Calculate Annual Maxima {#anmax}
@@ -125,8 +130,8 @@ anmax.out2 = anmax.out[,min.id]
 df.meta.out = df.meta[min.id,]
 
 # save it. do NOT save the annual maxima to the data folder
-write.csv(anmax.out2, paste0(idir,“atsite-anmax-“,dur,”-day.csv”), row.names=FALSE)
-write.csv(df.meta.out, paste0(idir,“atsite-anmax-“,dur,”-day-metadata.csv”), row.names=FALSE)
+write.csv(anmax.out2, paste0(idir,"atsite-anmax-",dur,"-day.csv"), row.names=FALSE)
+write.csv(df.meta.out, paste0(idir,"atsite-anmax-",dur,"-day-metadata.csv"), row.names=FALSE)
 ```
 
 ## PRISM Variables {#prism}
@@ -139,23 +144,28 @@ First, download all the PRISM variables from the website. To do this, navigate t
 knitr::include_url("https://prism.oregonstate.edu/normals/")
 ```
 
-Once all data have been downloaded, you can use the following code to crop them to a user-defined bounding box and save them all in an `.RData` file. 
+I just went back to the PRISM website while working through this document, and there is no more `Download All Normals Data (.bil)` option. To save yourself the hassle of downloading them all individually, you can download all the PRISM data you need for this analysis here: 
 
 ```{r eval=FALSE}
-library(raster)
-library(sp)
+\\CPC-Netapp3.eis.ds.usace.army.mil\RMC\RMC-HECSA\TRANSFER\RMC\Verdin\RMCmsp_v1.0_beta\PRISM_MSP
+```
+
+Once all data have been downloaded, you can use the following code (`0d_crop_prism.R`) to crop them to a user-defined bounding box and save them all in an RDS file. 
+
+```{r eval=FALSE}
+library(terra)
 
 # set datadir to directory where PRISM was downloaded
 datadir = "C:/Path/To/PRISM/Data/"
 
 # load the metadata from the previous step
-meta    = read.csv(paste0(idir,"/atsite-anmax-",dur,"-day-metadata.csv"))
+meta = read.csv(paste0(idir,"/atsite-anmax-",dur,"-day-metadata.csv"))
 
 # these are the raster variables we're going to use - DO NOT MODIFY THESE TWO LINES
 raster_vars = c("ppt", "tmean", "tmax", "tmin", "tdmean", "vpdmax", "vpdmin", "solclear", "solslope", "soltotal", "soltrans")
 m_vars = c(4, 5, 5, 5, 5, 5, 5, 3, 3, 3, 3)
 
-# read in the first prism file 
+# read in the first prism file
 prism_file = paste0(datadir,"/PRISM_VARIABLE_30yr_normal_800mM5_annual_asc.asc")
 
 # Define the bounding box with extra buffer to avoid NA at stations
@@ -165,30 +175,33 @@ lat_min = floor(min(meta$lat))
 lat_max = ceiling(max(meta$lat))
 
 # Define the extent of the bounding box
-bbox_extent = extent(lon_min, lon_max, lat_min, lat_max)
+bbox_extent = ext(lon_min, lon_max, lat_min, lat_max)
 
 # loop through all raster variables, modify the string/filename, read and crop
 # assign puts the cropped prism data into that variable name for convenience :)
+pb = txtProgressBar(min=0, max=length(raster_vars), style=3)
 for(i in 1:length(raster_vars)){
+  setTxtProgressBar(pb,i)
+  
   var = raster_vars[i]
   modified_string <- gsub("VARIABLE", var, prism_file)
-  PRISM_data = raster(gsub('5',m_vars[i], modified_string))
-  
-  PRISM_data <- crop(PRISM_data, bbox_extent) # Crop the raster using the extent
-  
+  PRISM_data = rast(gsub('5', m_vars[i], modified_string)) 
+
+  PRISM_data <- crop(PRISM_data, bbox_extent)
+
   assign(var, PRISM_data)
 }
 
 # read in the DEM and crop
-PRISM_us_dem_800m_r = raster(paste0(datadir,"/PRISM_us_dem_800m_bil.bil"))
-PRISM_us_dem_800m_r = crop(PRISM_us_dem_800m_r, bbox_extent) 
+PRISM_us_dem_800m_r = rast(paste0(datadir,"/PRISM_us_dem_800m_bil.bil"))
+PRISM_us_dem_800m_r = crop(PRISM_us_dem_800m_r, bbox_extent)
 
 # put them all in a list and save as RDS file
 list.out <- list(Z = PRISM_us_dem_800m_r,
                  ppt = ppt, tmean = tmean, tmax = tmax, tmin = tmin, tdmean = tdmean,
                  vpdmax = vpdmax, vpdmin = vpdmin, solclear = solclear, solslope = solslope,
                  soltotal = soltotal, soltrans = soltrans)
-saveRDS(list.out, paste0(idir,"/prism_crop.rds")
+saveRDS(list.out, paste0(idir,"/prism_crop.rds"))
 
 ```
 
@@ -203,4 +216,4 @@ Another option could be equally spaced points across a watershed. The tricky par
 
 ## Setting Up Your Workspace
 
-You now have all the required inputs to get started on your MSP analysis! The next chapter will walk you through the four main functions included in the RMCmsp library. See Appendix \@ref(example) for an example workflow.
+You now have all the required inputs to get started on your MSP analysis! The next chapter will walk you through the four main functions included in the RMCmsp library. See Appendix \@ref(appendixb) for an example workflow.
